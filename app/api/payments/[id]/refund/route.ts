@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
+import { requireAdminAuth } from "@/lib/auth";
 import { isKaspaAddress } from "@/lib/kaspa";
 import { getPayment, updatePaymentRefund } from "@/lib/payment-store";
 import { verifyRefundTransaction } from "@/lib/watcher";
@@ -12,6 +13,12 @@ type RouteContext = {
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   try {
     const { id } = await context.params;
     const payment = getPayment(id);
@@ -84,6 +91,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
+  const authError = requireAdminAuth(_request);
+
+  if (authError) {
+    return authError;
+  }
+
   const { id } = await context.params;
   const payment = getPayment(id);
   const refund = payment?.refund;

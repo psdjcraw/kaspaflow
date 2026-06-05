@@ -60,6 +60,7 @@ KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
 KASPA_WATCHER_MODE=mock
 KASPA_REST_API_URL=https://api.kaspa.org
+KASPAFLOW_ADMIN_TOKEN=
 ```
 
 `KAS_PRICE_SOURCE` accepts:
@@ -76,6 +77,12 @@ Mock defaults are only used when live requests fail or when
 
 `KASPAFLOW_DATA_DIR` controls where `payments.json` is written. The default is
 `./data`, which is ignored by git.
+
+`KASPAFLOW_ADMIN_TOKEN` is optional for local development. When it is set, API
+requests that create payments, update admin settings, sync/expire payments, or
+record refunds must include the token as `x-kaspaflow-admin-token` or
+`Authorization: Bearer <token>`. The browser UI stores the token in local
+storage from the merchant admin panel.
 
 `KASPA_WATCHER_MODE` accepts:
 

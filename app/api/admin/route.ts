@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
+import { requireAdminAuth } from "@/lib/auth";
 import {
   getMerchantSettings,
   setEmployeeActive,
@@ -13,6 +14,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   try {
     const body = await request.json();
     const action = String(body.action ?? "settings");

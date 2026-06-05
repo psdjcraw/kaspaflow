@@ -103,6 +103,7 @@ export default function Home() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
   const [expirySummary, setExpirySummary] = useState<ExpirySummary | null>(null);
+  const [adminToken, setAdminToken] = useState("");
   const [now, setNow] = useState(Date.now());
 
   const parsedFiatAmount = useMemo(() => parseAmount(fiatAmount), [fiatAmount]);
@@ -137,6 +138,10 @@ export default function Home() {
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
 
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setAdminToken(window.localStorage.getItem("kaspaflow-admin-token") ?? "");
   }, []);
 
   useEffect(() => {
@@ -337,6 +342,16 @@ export default function Home() {
     }
   }
 
+  function handleAdminTokenChange(value: string) {
+    setAdminToken(value);
+
+    if (value.trim()) {
+      window.localStorage.setItem("kaspaflow-admin-token", value.trim());
+    } else {
+      window.localStorage.removeItem("kaspaflow-admin-token");
+    }
+  }
+
   async function handleAddEmployee() {
     setError("");
 
@@ -528,6 +543,17 @@ export default function Home() {
             </div>
 
             <div className="admin-grid">
+              <label>
+                관리자 토큰
+                <input
+                  autoComplete="off"
+                  type="password"
+                  value={adminToken}
+                  onChange={(event) =>
+                    handleAdminTokenChange(event.target.value)
+                  }
+                />
+              </label>
               <label>
                 직원 이름
                 <input
@@ -946,10 +972,17 @@ function formatAmountInput(amount: number, currency: FiatCurrency) {
 async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
+  const headers = new Headers(init?.headers);
+  const adminToken = window.localStorage.getItem("kaspaflow-admin-token");
+
+  if (adminToken) {
+    headers.set("x-kaspaflow-admin-token", adminToken);
+  }
 
   try {
     const response = await fetch(input, {
       ...init,
+      headers,
       signal: controller.signal,
     });
     const payload = await response.json();

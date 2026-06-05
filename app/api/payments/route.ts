@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
+import { requireAdminAuth } from "@/lib/auth";
 import { buildKaspaUri } from "@/lib/kaspa";
 import { createPayment, listPayments } from "@/lib/payment-store";
 import { getKaspaQuote } from "@/lib/price";
@@ -10,6 +11,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   try {
     const body = await request.json();
     const quote = await getKaspaQuote(String(body.fiatCurrency ?? "KRW"));
