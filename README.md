@@ -64,7 +64,8 @@ per KAS.
 ## API
 
 - `GET /api/quote` returns the current KAS/KRW quote.
-- `GET /api/payments` lists payment requests in the in-memory store.
+- `GET /api/health` returns service, watcher, and quote health metadata.
+- `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
 - `GET /api/sales.csv` downloads the current sales log.
