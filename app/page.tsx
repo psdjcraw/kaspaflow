@@ -252,6 +252,7 @@ export default function Home() {
       const payload = await fetchJson<PaymentResponse>(`/api/payments/${id}`);
       setRequest(payload.payment);
       setKaspaUri(payload.kaspaUri);
+      setQrDataUrl(await createQr(payload.kaspaUri));
       setPayments((current) =>
         [payload.payment, ...current.filter((payment) => payment.id !== id)]
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { buildKaspaUri } from "@/lib/kaspa";
 import { getPayment } from "@/lib/payment-store";
+import { PaymentDetailClient } from "./payment-detail-client";
 
 type PageContext = {
   params: Promise<{
@@ -18,6 +19,8 @@ export default async function PaymentDetailPage(context: PageContext) {
     notFound();
   }
 
+  const kaspaUri = buildKaspaUri(payment);
+
   return (
     <main className="app-shell">
       <section className="detail-page">
@@ -30,6 +33,11 @@ export default async function PaymentDetailPage(context: PageContext) {
             돌아가기
           </Link>
         </div>
+
+        <PaymentDetailClient
+          initialPayment={payment}
+          initialKaspaUri={kaspaUri}
+        />
 
         <div className="detail-grid">
           <DetailItem label="상태" value={payment.status} />
@@ -48,16 +56,6 @@ export default async function PaymentDetailPage(context: PageContext) {
           <DetailItem label="TX" value={payment.txHash ?? "-"} />
           <DetailItem label="환불 상태" value={payment.refund?.status ?? "none"} />
           <DetailItem label="환불 TX" value={payment.refund?.txHash ?? "-"} />
-        </div>
-
-        <div className="detail-block">
-          <span>Kaspa 주소</span>
-          <code>{payment.merchantAddress}</code>
-        </div>
-
-        <div className="detail-block">
-          <span>Kaspa URI</span>
-          <code>{buildKaspaUri(payment)}</code>
         </div>
       </section>
     </main>
