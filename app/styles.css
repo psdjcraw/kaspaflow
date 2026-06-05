@@ -62,7 +62,8 @@ button:disabled {
 
 .sidebar,
 .payment-panel,
-.sales-panel {
+.sales-panel,
+.admin-panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -102,6 +103,11 @@ h2 {
   font-size: 30px;
   line-height: 1.1;
   margin-bottom: 0;
+}
+
+h3 {
+  font-size: 18px;
+  margin: 0;
 }
 
 .lede {
@@ -211,6 +217,20 @@ select {
   color: var(--bad);
 }
 
+.status-underpaid,
+.status-rejected {
+  background: rgba(183, 110, 0, 0.14);
+  color: var(--warn);
+}
+
+.status-overpaid,
+.status-requested,
+.status-tx-provided,
+.status-none {
+  background: #f1f3ef;
+  color: var(--muted);
+}
+
 .qr-stage {
   align-items: center;
   background:
@@ -273,6 +293,13 @@ select {
   padding: 24px;
 }
 
+.admin-panel {
+  box-shadow: none;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
 .section-heading {
   margin-bottom: 18px;
 }
@@ -287,6 +314,119 @@ select {
   color: var(--ink);
   min-height: 38px;
   padding: 0 14px;
+}
+
+.admin-grid,
+.refund-grid,
+.metric-grid,
+.chart-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-grid button,
+.refund-grid button {
+  min-height: 46px;
+}
+
+.employee-list {
+  display: grid;
+  gap: 8px;
+}
+
+.employee-row {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.employee-row span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+}
+
+.employee-row button {
+  background: #f1f3ef;
+  color: var(--ink);
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.refund-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-grid div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.metric-grid span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.metric-grid strong {
+  font-size: 20px;
+}
+
+.chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.chart-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.bar-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bar-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 78px minmax(0, 1fr) 110px;
+}
+
+.bar-row span,
+.bar-row strong {
+  font-size: 12px;
+}
+
+.bar-row div {
+  background: #eef7f3;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.bar-row i {
+  background: var(--kaspa-dark);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
 }
 
 .sales-list {
@@ -350,6 +490,12 @@ select {
   }
 
   .sale-row {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid,
+  .chart-grid,
+  .bar-row {
     grid-template-columns: 1fr;
   }
 }

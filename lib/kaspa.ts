@@ -13,6 +13,25 @@ export type PaymentStatus =
   | "overpaid"
   | "expired";
 
+export type RefundStatus =
+  | "none"
+  | "requested"
+  | "tx-provided"
+  | "confirmed"
+  | "rejected";
+
+export type RefundRecord = {
+  status: RefundStatus;
+  customerAddress?: string;
+  kasAmount?: number;
+  reason?: string;
+  requestedAt?: string;
+  txHash?: string;
+  checkedAt?: string;
+  confirmedAt?: string;
+  note?: string;
+};
+
 export type KaspaPaymentRequest = {
   id: string;
   merchantAddress: string;
@@ -28,6 +47,7 @@ export type KaspaPaymentRequest = {
   receivedKasAmount?: number;
   krwAmount?: number;
   rateKrwPerKas?: number;
+  refund?: RefundRecord;
 };
 
 export function buildKaspaUri(request: KaspaPaymentRequest) {

@@ -23,6 +23,38 @@ type PaymentResponse = {
   kaspaUri: string;
 };
 
+type MerchantEmployee = {
+  id: string;
+  name: string;
+  role: string;
+  active: boolean;
+};
+
+type MerchantSettings = {
+  merchantName: string;
+  merchantAddress: string;
+  defaultCurrency: FiatCurrency;
+  employees: MerchantEmployee[];
+};
+
+type SalesSummary = {
+  totals: {
+    fiatAmount: number;
+    kasAmount: number;
+    count: number;
+  };
+  daily: SalesPeriod[];
+  weekly: SalesPeriod[];
+  statusCounts: Record<string, number>;
+};
+
+type SalesPeriod = {
+  period: string;
+  fiatAmount: number;
+  kasAmount: number;
+  count: number;
+};
+
 const QUOTE_REFRESH_INTERVAL_MS = 15_000;
 
 export default function Home() {
@@ -39,6 +71,13 @@ export default function Home() {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [settings, setSettings] = useState<MerchantSettings | null>(null);
+  const [employeeName, setEmployeeName] = useState("");
+  const [employeeRole, setEmployeeRole] = useState("cashier");
+  const [analytics, setAnalytics] = useState<SalesSummary | null>(null);
+  const [refundAddress, setRefundAddress] = useState("");
+  const [refundTxHash, setRefundTxHash] = useState("");
+  const [refundReason, setRefundReason] = useState("");
 
   const parsedFiatAmount = useMemo(() => parseAmount(fiatAmount), [fiatAmount]);
 
@@ -63,6 +102,8 @@ export default function Home() {
 
   useEffect(() => {
     void refreshPayments();
+    void refreshAdmin();
+    void refreshAnalytics();
   }, []);
 
   useEffect(() => {
@@ -100,6 +141,27 @@ export default function Home() {
     }
   }
 
+  async function refreshAdmin() {
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin");
+      setSettings(payload.settings);
+      setMerchantName(payload.settings.merchantName);
+      setMerchantAddress(payload.settings.merchantAddress);
+      setFiatCurrency(payload.settings.defaultCurrency);
+    } catch {
+      return;
+    }
+  }
+
+  async function refreshAnalytics() {
+    try {
+      const payload = await fetchJson<{ summary: SalesSummary }>("/api/analytics");
+      setAnalytics(payload.summary);
+    } catch {
+      return;
+    }
+  }
+
   async function refreshPayment(id: string) {
     try {
       const payload = await fetchJson<PaymentResponse>(`/api/payments/${id}`);
@@ -109,6 +171,7 @@ export default function Home() {
         [payload.payment, ...current.filter((payment) => payment.id !== id)]
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       );
+      void refreshAnalytics();
     } catch {
       return;
     }
@@ -162,10 +225,112 @@ export default function Home() {
         ...current.filter((payment) => payment.id !== nextPayment.id),
       ]);
       setQrDataUrl(await createQr(nextKaspaUri));
+      void refreshAnalytics();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleSaveSettings() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          merchantName,
+          merchantAddress,
+          defaultCurrency: fiatCurrency,
+        }),
+      });
+      setSettings(payload.settings);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleAddEmployee() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "employee",
+          employee: {
+            name: employeeName,
+            role: employeeRole,
+          },
+        }),
+      });
+      setSettings(payload.settings);
+      setEmployeeName("");
+      setEmployeeRole("cashier");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleEmployeeStatus(employee: MerchantEmployee) {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "employee-status",
+          id: employee.id,
+          active: !employee.active,
+        }),
+      });
+      setSettings(payload.settings);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleRefund() {
+    if (!activePayment) {
+      return;
+    }
+
+    setError("");
+
+    try {
+      const payload = await fetchJson<PaymentResponse>(
+        `/api/payments/${activePayment.id}/refund`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerAddress: refundAddress,
+            txHash: refundTxHash,
+            reason: refundReason,
+            kasAmount: activePayment.receivedKasAmount ?? activePayment.kasAmount,
+          }),
+        },
+      );
+      setRequest(payload.payment);
+      setPayments((current) =>
+        [payload.payment, ...current.filter((payment) =>
+          payment.id !== payload.payment.id
+        )].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
   }
 
@@ -264,6 +429,56 @@ export default function Home() {
               {isSubmitting ? "생성 중" : "새 결제 만들기"}
             </button>
           </form>
+
+          <section className="admin-panel">
+            <div className="section-heading">
+              <h2>매장 관리자</h2>
+              <button type="button" onClick={() => void handleSaveSettings()}>
+                저장
+              </button>
+            </div>
+
+            <div className="admin-grid">
+              <label>
+                직원 이름
+                <input
+                  value={employeeName}
+                  onChange={(event) => setEmployeeName(event.target.value)}
+                />
+              </label>
+              <label>
+                역할
+                <select
+                  value={employeeRole}
+                  onChange={(event) => setEmployeeRole(event.target.value)}
+                >
+                  <option value="cashier">cashier</option>
+                  <option value="manager">manager</option>
+                  <option value="owner">owner</option>
+                </select>
+              </label>
+              <button type="button" onClick={() => void handleAddEmployee()}>
+                직원 추가
+              </button>
+            </div>
+
+            <div className="employee-list">
+              {(settings?.employees ?? []).map((employee) => (
+                <article className="employee-row" key={employee.id}>
+                  <div>
+                    <strong>{employee.name}</strong>
+                    <span>{employee.role}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleEmployeeStatus(employee)}
+                  >
+                    {employee.active ? "활성" : "비활성"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
         </aside>
 
         <section className="counter">
@@ -319,6 +534,38 @@ export default function Home() {
                 {activePayment.txHash ? (
                   <code className="address">TX {activePayment.txHash}</code>
                 ) : null}
+
+                <div className="refund-box">
+                  <div className="section-heading">
+                    <h3>환불 확인</h3>
+                    <span className={`status status-${activePayment.refund?.status ?? "none"}`}>
+                      {activePayment.refund?.status ?? "none"}
+                    </span>
+                  </div>
+                  <div className="refund-grid">
+                    <input
+                      placeholder="고객 Kaspa 주소"
+                      value={refundAddress}
+                      onChange={(event) => setRefundAddress(event.target.value)}
+                    />
+                    <input
+                      placeholder="환불 TX 해시"
+                      value={refundTxHash}
+                      onChange={(event) => setRefundTxHash(event.target.value)}
+                    />
+                    <input
+                      placeholder="환불 사유"
+                      value={refundReason}
+                      onChange={(event) => setRefundReason(event.target.value)}
+                    />
+                    <button type="button" onClick={() => void handleRefund()}>
+                      환불 기록/검증
+                    </button>
+                  </div>
+                  {activePayment.refund?.note ? (
+                    <p className="muted-copy">{activePayment.refund.note}</p>
+                  ) : null}
+                </div>
               </>
             ) : (
               <div className="empty-state">
@@ -326,6 +573,35 @@ export default function Home() {
                 <p>왼쪽에서 첫 Kaspa 결제 요청을 생성하세요.</p>
               </div>
             )}
+          </div>
+
+          <div className="sales-panel">
+            <div className="section-heading">
+              <h2>매출 대시보드</h2>
+              <button type="button" onClick={() => void refreshAnalytics()}>
+                새로고침
+              </button>
+            </div>
+
+            <div className="metric-grid">
+              <div>
+                <span>확정 결제</span>
+                <strong>{analytics?.totals.count ?? 0}</strong>
+              </div>
+              <div>
+                <span>원화 매출</span>
+                <strong>{formatFiat(analytics?.totals.fiatAmount ?? 0, "KRW")}</strong>
+              </div>
+              <div>
+                <span>KAS 수령</span>
+                <strong>{(analytics?.totals.kasAmount ?? 0).toFixed(4)} KAS</strong>
+              </div>
+            </div>
+
+            <div className="chart-grid">
+              <SalesChart title="일별 매출" rows={analytics?.daily ?? []} />
+              <SalesChart title="주별 매출" rows={analytics?.weekly ?? []} />
+            </div>
           </div>
 
           <div className="sales-panel">
@@ -363,6 +639,31 @@ export default function Home() {
         </section>
       </section>
     </main>
+  );
+}
+
+function SalesChart({ title, rows }: { title: string; rows: SalesPeriod[] }) {
+  const maxAmount = Math.max(...rows.map((row) => row.fiatAmount), 1);
+
+  return (
+    <section className="chart-panel">
+      <h3>{title}</h3>
+      <div className="bar-list">
+        {rows.length ? (
+          rows.slice(-7).map((row) => (
+            <div className="bar-row" key={row.period}>
+              <span>{row.period}</span>
+              <div>
+                <i style={{ width: `${Math.max(8, (row.fiatAmount / maxAmount) * 100)}%` }} />
+              </div>
+              <strong>{formatFiat(row.fiatAmount, "KRW")}</strong>
+            </div>
+          ))
+        ) : (
+          <p className="muted-copy">확정된 매출이 없습니다.</p>
+        )}
+      </div>
+    </section>
   );
 }
 

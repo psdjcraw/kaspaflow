@@ -20,6 +20,10 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Payment request API with expiry and calculated KAS amount
 - QR generation in the browser
 - Payment status polling through a watcher abstraction
+- Real Kaspa REST watcher mode with underpaid and overpaid detection
+- Refund request tracking with refund transaction hash verification
+- Merchant admin settings and employee list management
+- Daily and weekly sales dashboard summaries
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -73,7 +77,7 @@ Mock defaults are only used when live requests fail or when
 
 - `mock`: deterministic local status simulation for UI development.
 - `kaspa-rest`: polls `/addresses/{address}/full-transactions` from the
-  configured Kaspa REST API.
+  configured Kaspa REST API and matches payments inside their quote window.
 
 ## API
 
@@ -82,6 +86,12 @@ Mock defaults are only used when live requests fail or when
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
+- `POST /api/payments/:id/refund` records a refund request and optionally
+  verifies a provided refund transaction hash.
+- `GET /api/payments/:id/refund` re-checks the stored refund transaction hash.
+- `GET /api/admin` returns merchant settings and employees.
+- `POST /api/admin` updates merchant settings or employees.
+- `GET /api/analytics` returns total, daily, weekly, and status summaries.
 - `GET /api/sales.csv` downloads the current sales log.
 
 Example payment creation:
@@ -102,12 +112,14 @@ curl -X POST http://localhost:3000/api/payments \
 Before using this with a real merchant:
 
 - Replace the placeholder Kaspa address.
-- Use `KAS_PRICE_SOURCE=coingecko` or another real quote source.
+- Use `KAS_PRICE_SOURCE=auto`, `coinone`, or `coingecko` for live quotes.
 - Test `kaspa-rest` watcher mode with small real payments.
+- Refunds are non-custodial: the merchant sends funds from their own wallet,
+  then KaspaFlow verifies the refund transaction hash.
 - Move from file-backed storage to Postgres before multi-store beta.
 - Review legal, tax, refund, custody, and payment-processing implications.
 
 ## References
 
-- Kaspa REST API: <https://api.kaspa.org/docs>
+- Kaspa REST API: <https://api.kaspa.org/>
 - CoinGecko simple price API: <https://docs.coingecko.com/reference/simple-price>
