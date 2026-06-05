@@ -25,6 +25,7 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Merchant admin settings and employee list management
 - Daily and weekly sales dashboard summaries
 - Bulk watcher sync for all open payments
+- Backend automatic sync loop for open payments
 - Automatic expiry cleanup for stale open payments
 - Separate payment detail pages at `/payments/:id`
 - File-backed audit log for operational events
@@ -32,6 +33,8 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Mainnet/testnet-10 Kaspa REST API selection
 - Docker Compose deployment scaffold
 - Installable PWA shell for merchant devices
+- PNG, SVG, Apple touch, and maskable PWA icons
+- Offline fallback page for installed devices
 - Multi-store merchant settings with active store switching
 - Server-sent realtime payment, dashboard, and audit updates
 - Error monitoring endpoint backed by the audit log
@@ -69,8 +72,11 @@ KAS_EUR_RATE=0.23
 KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
 KASPA_WATCHER_MODE=mock
+KASPAFLOW_BACKGROUND_SYNC_ENABLED=true
+KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS=15000
 KASPA_NETWORK=mainnet
 KASPA_REST_API_URL=https://api.kaspa.org
+KASPAFLOW_ENABLE_SIMULATION=false
 KASPAFLOW_ADMIN_TOKEN=
 KASPAFLOW_NOTIFY_WEBHOOK_URL=
 ```
@@ -104,12 +110,20 @@ cannot attach custom headers.
 - `kaspa-rest`: polls `/addresses/{address}/full-transactions` from the
   configured Kaspa REST API and matches payments inside their quote window.
 
+`KASPAFLOW_BACKGROUND_SYNC_ENABLED` controls the server-side automatic sync
+loop. It defaults to enabled. `KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS` controls
+the interval and is clamped to a minimum of 5000 ms.
+
 `KASPA_NETWORK` accepts:
 
 - `mainnet`: defaults to `https://api.kaspa.org`.
 - `testnet-10`: defaults to `https://api-tn10.kaspa.org`.
 
 `KASPA_REST_API_URL` overrides the network default when set.
+
+`KASPAFLOW_ENABLE_SIMULATION=true` enables the development-only simulation
+endpoint and UI controls for marking payments as seen or confirmed. Leave it
+off for real merchant pilots.
 
 `KASPAFLOW_NOTIFY_WEBHOOK_URL` is optional. When configured, KaspaFlow sends
 JSON webhook events for payment creation, bulk sync, and refund activity.
@@ -148,6 +162,7 @@ container outside a local pilot network.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
 - `POST /api/payments/sync` syncs every open payment with the active watcher.
+- `POST /api/payments/:id/simulate` updates a payment in development simulation mode.
 - `POST /api/payments/expire` expires stale waiting, seen, and underpaid payments.
 - `POST /api/payments/:id/refund` records a refund request and optionally
   verifies a provided refund transaction hash.
@@ -180,6 +195,7 @@ Before using this with a real merchant:
 
 - Replace the placeholder Kaspa address.
 - For testnet pilots, follow `docs/testnet-dry-run.md`.
+- For mainnet pilots, follow `docs/operations.md`.
 - Use `KAS_PRICE_SOURCE=auto`, `coinone`, or `coingecko` for live quotes.
 - Test `kaspa-rest` watcher mode with small real payments.
 - Refunds are non-custodial: the merchant sends funds from their own wallet,
