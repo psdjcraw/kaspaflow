@@ -387,6 +387,7 @@ select {
   color: var(--muted);
   display: block;
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .employee-row button {

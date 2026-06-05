@@ -27,6 +27,12 @@ export function isAdminAuthEnabled() {
 }
 
 function getProvidedToken(request: Request) {
+  const urlToken = new URL(request.url).searchParams.get("adminToken");
+
+  if (urlToken) {
+    return urlToken;
+  }
+
   const explicitHeader = request.headers.get("x-kaspaflow-admin-token");
 
   if (explicitHeader) {

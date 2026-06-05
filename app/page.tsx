@@ -30,10 +30,20 @@ type MerchantEmployee = {
   active: boolean;
 };
 
+type MerchantStore = {
+  id: string;
+  name: string;
+  merchantAddress: string;
+  defaultCurrency: FiatCurrency;
+  active: boolean;
+};
+
 type MerchantSettings = {
   merchantName: string;
   merchantAddress: string;
   defaultCurrency: FiatCurrency;
+  activeStoreId: string;
+  stores: MerchantStore[];
   employees: MerchantEmployee[];
 };
 
@@ -96,6 +106,8 @@ export default function Home() {
   const [settings, setSettings] = useState<MerchantSettings | null>(null);
   const [employeeName, setEmployeeName] = useState("");
   const [employeeRole, setEmployeeRole] = useState("cashier");
+  const [storeName, setStoreName] = useState("");
+  const [storeAddress, setStoreAddress] = useState(DEFAULT_MERCHANT_ADDRESS);
   const [analytics, setAnalytics] = useState<SalesSummary | null>(null);
   const [refundAddress, setRefundAddress] = useState("");
   const [refundTxHash, setRefundTxHash] = useState("");
@@ -149,6 +161,26 @@ export default function Home() {
       void navigator.serviceWorker.register("/sw.js");
     }
   }, []);
+
+  useEffect(() => {
+    const eventUrl = adminToken
+      ? `/api/events?adminToken=${encodeURIComponent(adminToken)}`
+      : "/api/events";
+    const events = new EventSource(eventUrl);
+
+    events.addEventListener("kaspaflow", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data) as {
+        payments: KaspaPaymentRequest[];
+        analytics: SalesSummary;
+        auditEvents: AuditEvent[];
+      };
+      setPayments(payload.payments);
+      setAnalytics(payload.analytics);
+      setAuditEvents(payload.auditEvents);
+    });
+
+    return () => events.close();
+  }, [adminToken]);
 
   useEffect(() => {
     if (!request || request.status === "confirmed" || request.status === "expired") {
@@ -384,6 +416,57 @@ export default function Home() {
     }
   }
 
+  async function handleAddStore() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "store",
+          store: {
+            name: storeName,
+            merchantAddress: storeAddress,
+            defaultCurrency: fiatCurrency,
+          },
+        }),
+      });
+      setSettings(payload.settings);
+      setStoreName("");
+      setStoreAddress(payload.settings.merchantAddress);
+      void refreshAudit();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleActiveStore(store: MerchantStore) {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ settings: MerchantSettings }>("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "active-store",
+          id: store.id,
+        }),
+      });
+      setSettings(payload.settings);
+      setMerchantName(payload.settings.merchantName);
+      setMerchantAddress(payload.settings.merchantAddress);
+      setFiatCurrency(payload.settings.defaultCurrency);
+      void refreshAudit();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
   async function handleEmployeeStatus(employee: MerchantEmployee) {
     setError("");
 
@@ -561,6 +644,23 @@ export default function Home() {
                 />
               </label>
               <label>
+                새 매장명
+                <input
+                  value={storeName}
+                  onChange={(event) => setStoreName(event.target.value)}
+                />
+              </label>
+              <label>
+                새 매장 Kaspa 주소
+                <input
+                  value={storeAddress}
+                  onChange={(event) => setStoreAddress(event.target.value)}
+                />
+              </label>
+              <button type="button" onClick={() => void handleAddStore()}>
+                매장 추가
+              </button>
+              <label>
                 직원 이름
                 <input
                   value={employeeName}
@@ -581,6 +681,23 @@ export default function Home() {
               <button type="button" onClick={() => void handleAddEmployee()}>
                 직원 추가
               </button>
+            </div>
+
+            <div className="employee-list">
+              {(settings?.stores ?? []).map((store) => (
+                <article className="employee-row" key={store.id}>
+                  <div>
+                    <strong>{store.name}</strong>
+                    <span>{store.defaultCurrency} · {store.merchantAddress}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleActiveStore(store)}
+                  >
+                    {settings?.activeStoreId === store.id ? "선택됨" : "선택"}
+                  </button>
+                </article>
+              ))}
             </div>
 
             <div className="employee-list">

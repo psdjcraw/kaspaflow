@@ -4,9 +4,11 @@ import { appendAuditEvent } from "@/lib/audit-store";
 import { requireAdminAuth } from "@/lib/auth";
 import {
   getMerchantSettings,
+  setActiveStore,
   setEmployeeActive,
   updateMerchantSettings,
   upsertEmployee,
+  upsertStore,
 } from "@/lib/merchant-store";
 
 export async function GET() {
@@ -47,6 +49,33 @@ export async function POST(request: NextRequest) {
         metadata: {
           employeeId: String(body.id ?? ""),
           active: Boolean(body.active),
+        },
+      });
+
+      return NextResponse.json({
+        settings,
+      });
+    }
+
+    if (action === "store") {
+      const settings = upsertStore(body.store ?? {});
+      appendAuditEvent({
+        type: "admin.store",
+        message: "Updated merchant store list.",
+      });
+
+      return NextResponse.json({
+        settings,
+      });
+    }
+
+    if (action === "active-store") {
+      const settings = setActiveStore(String(body.id ?? ""));
+      appendAuditEvent({
+        type: "admin.active-store",
+        message: "Changed active merchant store.",
+        metadata: {
+          storeId: String(body.id ?? ""),
         },
       });
 

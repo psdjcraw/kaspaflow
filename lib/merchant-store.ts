@@ -23,10 +23,20 @@ export type MerchantEmployee = {
   active: boolean;
 };
 
+export type MerchantStore = {
+  id: string;
+  name: string;
+  merchantAddress: string;
+  defaultCurrency: FiatCurrency;
+  active: boolean;
+};
+
 export type MerchantSettings = {
   merchantName: string;
   merchantAddress: string;
   defaultCurrency: FiatCurrency;
+  activeStoreId: string;
+  stores: MerchantStore[];
   employees: MerchantEmployee[];
   updatedAt: string;
 };
@@ -39,6 +49,16 @@ const defaultSettings: MerchantSettings = {
   merchantName: "KaspaFlow Cafe",
   merchantAddress: DEFAULT_MERCHANT_ADDRESS,
   defaultCurrency: "KRW",
+  activeStoreId: "STORE-MAIN",
+  stores: [
+    {
+      id: "STORE-MAIN",
+      name: "KaspaFlow Cafe",
+      merchantAddress: DEFAULT_MERCHANT_ADDRESS,
+      defaultCurrency: "KRW",
+      active: true,
+    },
+  ],
   employees: [
     {
       id: "EMP-OWNER",
@@ -85,6 +105,64 @@ export function updateMerchantSettings(
     settings.defaultCurrency = input.defaultCurrency;
   }
 
+  settings.updatedAt = new Date().toISOString();
+  syncActiveStoreFromSettings();
+  persistSettings();
+  return settings;
+}
+
+export function upsertStore(input: Partial<MerchantStore>) {
+  const name = String(input.name ?? "").trim();
+  const merchantAddress = String(input.merchantAddress ?? "").trim();
+  const defaultCurrency = input.defaultCurrency ?? settings.defaultCurrency;
+
+  if (!name) {
+    throw new Error("Store name is required.");
+  }
+
+  if (!isKaspaAddress(merchantAddress)) {
+    throw new Error("A valid Kaspa address is required.");
+  }
+
+  if (!isFiatCurrency(defaultCurrency)) {
+    throw new Error("Unsupported fiat currency.");
+  }
+
+  const store = input.id
+    ? settings.stores.find((entry) => entry.id === input.id)
+    : null;
+
+  if (store) {
+    store.name = name;
+    store.merchantAddress = merchantAddress;
+    store.defaultCurrency = defaultCurrency;
+    store.active = input.active ?? store.active;
+  } else {
+    settings.stores.push({
+      id: `STORE-${Date.now().toString(36).toUpperCase()}`,
+      name,
+      merchantAddress,
+      defaultCurrency,
+      active: input.active ?? true,
+    });
+  }
+
+  settings.updatedAt = new Date().toISOString();
+  persistSettings();
+  return settings;
+}
+
+export function setActiveStore(id: string) {
+  const store = settings.stores.find((entry) => entry.id === id);
+
+  if (!store) {
+    throw new Error("Store not found.");
+  }
+
+  settings.activeStoreId = store.id;
+  settings.merchantName = store.name;
+  settings.merchantAddress = store.merchantAddress;
+  settings.defaultCurrency = store.defaultCurrency;
   settings.updatedAt = new Date().toISOString();
   persistSettings();
   return settings;
@@ -152,10 +230,11 @@ function loadSettings(): MerchantSettings {
   }
 
   try {
-    return {
+    const loaded = {
       ...defaultSettings,
       ...(JSON.parse(readFileSync(settingsPath, "utf8")) as MerchantSettings),
     };
+    return normalizeSettings(loaded);
   } catch {
     return defaultSettings;
   }
@@ -166,4 +245,41 @@ function persistSettings() {
   mkdirSync(path.dirname(settingsPath), { recursive: true });
   writeFileSync(`${settingsPath}.tmp`, JSON.stringify(settings, null, 2));
   renameSync(`${settingsPath}.tmp`, settingsPath);
+}
+
+function normalizeSettings(value: MerchantSettings): MerchantSettings {
+  const stores = value.stores?.length
+    ? value.stores
+    : [
+        {
+          id: value.activeStoreId || "STORE-MAIN",
+          name: value.merchantName,
+          merchantAddress: value.merchantAddress,
+          defaultCurrency: value.defaultCurrency,
+          active: true,
+        },
+      ];
+  const activeStore = stores.find((store) => store.id === value.activeStoreId) ??
+    stores[0];
+
+  return {
+    ...value,
+    stores,
+    activeStoreId: activeStore.id,
+    merchantName: activeStore.name,
+    merchantAddress: activeStore.merchantAddress,
+    defaultCurrency: activeStore.defaultCurrency,
+  };
+}
+
+function syncActiveStoreFromSettings() {
+  const store = settings.stores.find((entry) => entry.id === settings.activeStoreId);
+
+  if (!store) {
+    return;
+  }
+
+  store.name = settings.merchantName;
+  store.merchantAddress = settings.merchantAddress;
+  store.defaultCurrency = settings.defaultCurrency;
 }

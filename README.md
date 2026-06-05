@@ -32,6 +32,9 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Mainnet/testnet-10 Kaspa REST API selection
 - Docker Compose deployment scaffold
 - Installable PWA shell for merchant devices
+- Multi-store merchant settings with active store switching
+- Server-sent realtime payment, dashboard, and audit updates
+- Error monitoring endpoint backed by the audit log
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -88,7 +91,9 @@ Mock defaults are only used when live requests fail or when
 requests that create payments, update admin settings, sync/expire payments, or
 record refunds must include the token as `x-kaspaflow-admin-token` or
 `Authorization: Bearer <token>`. The browser UI stores the token in local
-storage from the merchant admin panel.
+storage from the merchant admin panel. The realtime `/api/events` stream uses
+the same token as an `adminToken` query parameter because browser EventSource
+cannot attach custom headers.
 
 `KASPA_WATCHER_MODE` accepts:
 
@@ -120,6 +125,8 @@ container outside a local pilot network.
 
 - `GET /api/quote?fiat=USD` returns the current KAS/fiat quote.
 - `GET /api/health` returns service, watcher, and quote health metadata.
+- `GET /api/kaspa/probe` checks the configured Kaspa REST API health and
+  blockDAG endpoint.
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
@@ -132,6 +139,8 @@ container outside a local pilot network.
 - `POST /api/admin` updates merchant settings or employees.
 - `GET /api/analytics` returns total, daily, weekly, and status summaries.
 - `GET /api/audit` returns recent payment, refund, admin, and sync events.
+- `GET /api/events` streams realtime payment, dashboard, and audit updates.
+- `GET /api/errors` returns recent failed/rejected operational events.
 - `GET /api/sales.csv` downloads the current sales log.
 - `GET /payments/:id` opens the merchant-facing payment detail page.
 

@@ -27,6 +27,9 @@ describe("admin API auth", () => {
         }),
       ),
     ).toBeNull();
+    expect(
+      requireAdminAuth(new Request("http://localhost?adminToken=secret")),
+    ).toBeNull();
   });
 
   it("rejects requests with a missing or mismatched admin token", () => {
