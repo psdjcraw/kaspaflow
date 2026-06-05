@@ -44,7 +44,7 @@ If port 3000 is busy, Next.js will print the fallback port.
 
 ```bash
 QUOTE_FIAT=KRW
-KAS_PRICE_SOURCE=coingecko
+KAS_PRICE_SOURCE=auto
 KAS_KRW_RATE=350
 KAS_USD_RATE=0.25
 KAS_EUR_RATE=0.23
@@ -56,12 +56,14 @@ KASPA_REST_API_URL=https://api.kaspa.org
 
 `KAS_PRICE_SOURCE` accepts:
 
-- `mock`: use configured env rates or built-in development defaults.
+- `auto`: use Coinone for KAS/KRW and CoinGecko for other fiat quotes.
+- `coinone`: fetch KAS/KRW from Coinone and fall back to CoinGecko if needed.
 - `coingecko`: fetch KAS prices from CoinGecko and fall back to mock if the
   request fails.
+- `mock`: use configured env rates or built-in development defaults.
 
-When `KAS_PRICE_SOURCE` is not set, the quote endpoint uses CoinGecko live
-quotes. Mock defaults are only used when the live request fails or when
+When `KAS_PRICE_SOURCE` is not set, the quote endpoint uses `auto` live quotes.
+Mock defaults are only used when live requests fail or when
 `KAS_PRICE_SOURCE=mock` is explicitly set.
 
 `KASPAFLOW_DATA_DIR` controls where `payments.json` is written. The default is

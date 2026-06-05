@@ -20,7 +20,7 @@ const DEFAULT_MOCK_RATES: Record<FiatCurrency, number> = {
   JPY: 39,
 };
 
-const DEFAULT_PRICE_SOURCE = "coingecko";
+const DEFAULT_PRICE_SOURCE = "auto";
 
 export async function getKaspaQuote(
   requestedFiat = process.env.QUOTE_FIAT ?? "KRW",
@@ -28,7 +28,27 @@ export async function getKaspaQuote(
   const fiatCurrency = normalizeFiatCurrency(requestedFiat);
   const priceSource = process.env.KAS_PRICE_SOURCE ?? DEFAULT_PRICE_SOURCE;
 
-  if (priceSource === "coingecko") {
+  if (priceSource === "mock") {
+    return getMockQuote(fiatCurrency);
+  }
+
+  if (priceSource === "coinone" && fiatCurrency === "KRW") {
+    const quote = await getCoinoneKrwQuote();
+
+    if (quote) {
+      return quote;
+    }
+  }
+
+  if (priceSource === "auto" && fiatCurrency === "KRW") {
+    const quote = await getCoinoneKrwQuote();
+
+    if (quote) {
+      return quote;
+    }
+  }
+
+  if (priceSource === "auto" || priceSource === "coingecko" || priceSource === "coinone") {
     const quote = await getCoinGeckoQuote(fiatCurrency);
 
     if (quote) {
@@ -97,6 +117,42 @@ async function getCoinGeckoQuote(
       rateFiatPerKas,
       rateKrwPerKas: fiatCurrency === "KRW" ? rateFiatPerKas : undefined,
       source: "coingecko",
+      quotedAt: new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function getCoinoneKrwQuote(): Promise<KaspaQuote | null> {
+  const url = "https://api.coinone.co.kr/public/v2/ticker_new/KRW/KAS";
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = await response.json();
+    const ticker = Array.isArray(payload?.tickers) ? payload.tickers[0] : null;
+    const rateFiatPerKas = Number(ticker?.last);
+
+    if (!Number.isFinite(rateFiatPerKas) || rateFiatPerKas <= 0) {
+      return null;
+    }
+
+    return {
+      pair: "KAS/KRW",
+      fiatCurrency: "KRW",
+      rateFiatPerKas,
+      rateKrwPerKas: rateFiatPerKas,
+      source: "coinone",
       quotedAt: new Date().toISOString(),
     };
   } catch {
