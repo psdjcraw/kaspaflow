@@ -23,6 +23,8 @@ type PaymentResponse = {
   kaspaUri: string;
 };
 
+const QUOTE_REFRESH_INTERVAL_MS = 15_000;
+
 export default function Home() {
   const [merchantName, setMerchantName] = useState("KaspaFlow Cafe");
   const [merchantAddress, setMerchantAddress] = useState(
@@ -51,8 +53,17 @@ export default function Home() {
 
   useEffect(() => {
     void refreshQuote();
-    void refreshPayments();
+
+    const interval = window.setInterval(() => {
+      void refreshQuote();
+    }, QUOTE_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
   }, [fiatCurrency]);
+
+  useEffect(() => {
+    void refreshPayments();
+  }, []);
 
   useEffect(() => {
     if (!request || request.status === "confirmed" || request.status === "expired") {
@@ -197,6 +208,7 @@ export default function Home() {
             <label>
               결제 금액
               <input
+                type="text"
                 inputMode={
                   fiatCurrency === "KRW" || fiatCurrency === "JPY"
                     ? "numeric"
@@ -240,7 +252,9 @@ export default function Home() {
               </strong>
               <small>
                 예상 결제액 {estimatedKas.toFixed(8)} KAS ·{" "}
-                {quote?.source ?? "quote"}
+                {quote
+                  ? `${quote.source} · ${formatQuoteTime(quote.quotedAt)}`
+                  : "quote"}
               </small>
             </div>
 
@@ -358,6 +372,14 @@ function formatFiat(amount: number, currency: FiatCurrency) {
     currency,
     maximumFractionDigits: currency === "KRW" || currency === "JPY" ? 0 : 2,
   }).format(amount);
+}
+
+function formatQuoteTime(quotedAt: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(quotedAt));
 }
 
 function parseAmount(value: string) {

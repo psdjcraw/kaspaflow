@@ -20,12 +20,15 @@ const DEFAULT_MOCK_RATES: Record<FiatCurrency, number> = {
   JPY: 39,
 };
 
+const DEFAULT_PRICE_SOURCE = "coingecko";
+
 export async function getKaspaQuote(
   requestedFiat = process.env.QUOTE_FIAT ?? "KRW",
 ): Promise<KaspaQuote> {
   const fiatCurrency = normalizeFiatCurrency(requestedFiat);
+  const priceSource = process.env.KAS_PRICE_SOURCE ?? DEFAULT_PRICE_SOURCE;
 
-  if (process.env.KAS_PRICE_SOURCE === "coingecko") {
+  if (priceSource === "coingecko") {
     const quote = await getCoinGeckoQuote(fiatCurrency);
 
     if (quote) {
@@ -74,9 +77,7 @@ async function getCoinGeckoQuote(
       headers: {
         Accept: "application/json",
       },
-      next: {
-        revalidate: 30,
-      },
+      cache: "no-store",
     });
 
     if (!response.ok) {
