@@ -35,6 +35,7 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Multi-store merchant settings with active store switching
 - Server-sent realtime payment, dashboard, and audit updates
 - Error monitoring endpoint backed by the audit log
+- Testnet dry-run checklist and validation API
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -127,6 +128,9 @@ container outside a local pilot network.
 - `GET /api/health` returns service, watcher, and quote health metadata.
 - `GET /api/kaspa/probe` checks the configured Kaspa REST API health and
   blockDAG endpoint.
+- `GET /api/testnet` returns the testnet dry-run checklist.
+- `GET /api/testnet?mode=balance&address=...` checks a testnet address balance.
+- `GET /api/testnet?mode=tx&txId=...` fetches a transaction detail.
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
@@ -162,6 +166,7 @@ curl -X POST http://localhost:3000/api/payments \
 Before using this with a real merchant:
 
 - Replace the placeholder Kaspa address.
+- For testnet pilots, follow `docs/testnet-dry-run.md`.
 - Use `KAS_PRICE_SOURCE=auto`, `coinone`, or `coingecko` for live quotes.
 - Test `kaspa-rest` watcher mode with small real payments.
 - Refunds are non-custodial: the merchant sends funds from their own wallet,

@@ -14,3 +14,9 @@ export function getKaspaNetwork(): KaspaNetwork {
 export function getKaspaRestApiUrl() {
   return process.env.KASPA_REST_API_URL || NETWORK_REST_API_URLS[getKaspaNetwork()];
 }
+
+export function buildKaspaRestUrl(pathname: string) {
+  const baseUrl = getKaspaRestApiUrl();
+
+  return new URL(pathname, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
+}

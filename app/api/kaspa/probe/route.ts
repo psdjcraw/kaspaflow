@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { getKaspaNetwork, getKaspaRestApiUrl } from "@/lib/kaspa-network";
+import {
+  buildKaspaRestUrl,
+  getKaspaNetwork,
+  getKaspaRestApiUrl,
+} from "@/lib/kaspa-network";
 
 export async function GET() {
   const baseUrl = getKaspaRestApiUrl();
   const [health, blockdag] = await Promise.all([
-    fetchKaspaEndpoint(baseUrl, "/info/health"),
-    fetchKaspaEndpoint(baseUrl, "/info/blockdag"),
+    fetchKaspaEndpoint("/info/health"),
+    fetchKaspaEndpoint("/info/blockdag"),
   ]);
 
   return NextResponse.json({
@@ -19,12 +23,9 @@ export async function GET() {
   });
 }
 
-async function fetchKaspaEndpoint(baseUrl: string, pathname: string) {
+async function fetchKaspaEndpoint(pathname: string) {
   const startedAt = Date.now();
-  const url = new URL(
-    pathname,
-    baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`,
-  );
+  const url = buildKaspaRestUrl(pathname);
 
   try {
     const response = await fetch(url, {
