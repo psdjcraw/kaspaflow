@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-store";
 import { requireAdminAuth } from "@/lib/auth";
 import { isKaspaAddress } from "@/lib/kaspa";
+import { sendNotification } from "@/lib/notifications";
 import { getPayment, updatePaymentRefund } from "@/lib/payment-store";
 import { verifyRefundTransaction } from "@/lib/watcher";
 
@@ -64,6 +65,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
         : `Refund requested for ${id}.`,
       paymentId: id,
       metadata: {
+        kasAmount,
+      },
+    });
+    await sendNotification({
+      type: txHash ? "refund.tx-provided" : "refund.requested",
+      message: txHash
+        ? `Refund transaction provided for ${id}.`
+        : `Refund requested for ${id}.`,
+      paymentId: id,
+      data: {
         kasAmount,
       },
     });
@@ -132,6 +143,14 @@ async function verifyAndStoreRefund(
     message: verification.note,
     paymentId,
     metadata: {
+      kasAmount,
+    },
+  });
+  await sendNotification({
+    type: `refund.${verification.status}`,
+    message: verification.note,
+    paymentId,
+    data: {
       kasAmount,
     },
   });

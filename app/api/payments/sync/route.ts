@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
 import { requireAdminAuth } from "@/lib/auth";
+import { sendNotification } from "@/lib/notifications";
 import { syncOpenPaymentsFromWatcher } from "@/lib/watcher";
 
 export async function POST(request: Request) {
@@ -17,6 +18,14 @@ export async function POST(request: Request) {
     type: "payments.sync",
     message: `Synced ${summary.checked} open payments, ${summary.changed} changed.`,
     metadata: {
+      checked: summary.checked,
+      changed: summary.changed,
+    },
+  });
+  await sendNotification({
+    type: "payments.sync",
+    message: `Synced ${summary.checked} open payments, ${summary.changed} changed.`,
+    data: {
       checked: summary.checked,
       changed: summary.changed,
     },

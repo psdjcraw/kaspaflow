@@ -1,0 +1,21 @@
+services:
+  kaspaflow:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      QUOTE_FIAT: KRW
+      KAS_PRICE_SOURCE: auto
+      KASPAFLOW_DATA_DIR: /app/data
+      KASPA_WATCHER_MODE: kaspa-rest
+      KASPA_NETWORK: mainnet
+      KASPA_REST_API_URL: ""
+      KASPAFLOW_ADMIN_TOKEN: ""
+      KASPAFLOW_NOTIFY_WEBHOOK_URL: ""
+    volumes:
+      - kaspaflow-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  kaspaflow-data:

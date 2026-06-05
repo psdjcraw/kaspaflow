@@ -57,7 +57,7 @@ export function buildKaspaUri(request: KaspaPaymentRequest) {
 }
 
 export function isKaspaAddress(value: string) {
-  return /^kaspa:[a-z0-9]{61,63}$/i.test(value.trim());
+  return /^kaspa(test)?:[a-z0-9]{61,63}$/i.test(value.trim());
 }
 
 export function isFiatCurrency(value: string): value is FiatCurrency {

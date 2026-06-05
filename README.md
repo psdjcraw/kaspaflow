@@ -28,6 +28,10 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Automatic expiry cleanup for stale open payments
 - Separate payment detail pages at `/payments/:id`
 - File-backed audit log for operational events
+- Optional webhook notifications for payment, sync, and refund events
+- Mainnet/testnet-10 Kaspa REST API selection
+- Docker Compose deployment scaffold
+- Installable PWA shell for merchant devices
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -59,8 +63,10 @@ KAS_EUR_RATE=0.23
 KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
 KASPA_WATCHER_MODE=mock
+KASPA_NETWORK=mainnet
 KASPA_REST_API_URL=https://api.kaspa.org
 KASPAFLOW_ADMIN_TOKEN=
+KASPAFLOW_NOTIFY_WEBHOOK_URL=
 ```
 
 `KAS_PRICE_SOURCE` accepts:
@@ -89,6 +95,26 @@ storage from the merchant admin panel.
 - `mock`: deterministic local status simulation for UI development.
 - `kaspa-rest`: polls `/addresses/{address}/full-transactions` from the
   configured Kaspa REST API and matches payments inside their quote window.
+
+`KASPA_NETWORK` accepts:
+
+- `mainnet`: defaults to `https://api.kaspa.org`.
+- `testnet-10`: defaults to `https://api-tn10.kaspa.org`.
+
+`KASPA_REST_API_URL` overrides the network default when set.
+
+`KASPAFLOW_NOTIFY_WEBHOOK_URL` is optional. When configured, KaspaFlow sends
+JSON webhook events for payment creation, bulk sync, and refund activity.
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+The compose file mounts `/app/data` as a persistent volume. Set
+`KASPAFLOW_ADMIN_TOKEN`, `KASPA_NETWORK`, and webhook values before exposing the
+container outside a local pilot network.
 
 ## API
 
@@ -137,4 +163,5 @@ Before using this with a real merchant:
 ## References
 
 - Kaspa REST API: <https://api.kaspa.org/>
+- Kaspa testnet-10 REST API: <https://api-tn10.kaspa.org/docs>
 - CoinGecko simple price API: <https://docs.coingecko.com/reference/simple-price>

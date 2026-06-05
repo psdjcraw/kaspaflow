@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./styles.css";
 
 export const metadata: Metadata = {
   title: "KaspaFlow",
   description: "Kaspa-only direct payments for small merchants",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#167761",
 };
 
 export default function RootLayout({

@@ -12,6 +12,11 @@ import {
 describe("kaspa domain helpers", () => {
   it("validates Kaspa addresses with the REST API length shape", () => {
     expect(isKaspaAddress(DEFAULT_MERCHANT_ADDRESS)).toBe(true);
+    expect(
+      isKaspaAddress(
+        "kaspatest:q000000000000000000000000000000000000000000000000000000000000",
+      ),
+    ).toBe(true);
     expect(isKaspaAddress("kaspa:q123")).toBe(false);
     expect(
       isKaspaAddress(

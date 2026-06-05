@@ -145,6 +145,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js");
+    }
+  }, []);
+
+  useEffect(() => {
     if (!request || request.status === "confirmed" || request.status === "expired") {
       return;
     }

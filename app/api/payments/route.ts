@@ -4,6 +4,7 @@ import { appendAuditEvent } from "@/lib/audit-store";
 import { requireAdminAuth } from "@/lib/auth";
 import { buildKaspaUri } from "@/lib/kaspa";
 import { createPayment, listPayments } from "@/lib/payment-store";
+import { sendNotification } from "@/lib/notifications";
 import { getKaspaQuote } from "@/lib/price";
 
 export async function GET() {
@@ -33,6 +34,16 @@ export async function POST(request: NextRequest) {
       message: `Created payment ${payment.id}.`,
       paymentId: payment.id,
       metadata: {
+        fiatAmount: payment.fiatAmount,
+        fiatCurrency: payment.fiatCurrency,
+        kasAmount: payment.kasAmount,
+      },
+    });
+    await sendNotification({
+      type: "payment.created",
+      message: `New KaspaFlow payment ${payment.id} created.`,
+      paymentId: payment.id,
+      data: {
         fiatAmount: payment.fiatAmount,
         fiatCurrency: payment.fiatCurrency,
         kasAmount: payment.kasAmount,

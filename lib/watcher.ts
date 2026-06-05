@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { KaspaPaymentRequest, PaymentStatus } from "./kaspa";
+import { getKaspaRestApiUrl } from "./kaspa-network";
 import { getPayment, listPayments, updatePaymentStatus } from "./payment-store";
 
 export type ChainPaymentObservation = {
@@ -178,7 +179,7 @@ function getWatcher(): KaspaPaymentWatcher {
 }
 
 async function fetchAddressTransactions(address: string) {
-  const baseUrl = process.env.KASPA_REST_API_URL ?? "https://api.kaspa.org";
+  const baseUrl = getKaspaRestApiUrl();
   const url = new URL(
     `/addresses/${address}/full-transactions`,
     baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`,
@@ -213,7 +214,7 @@ async function fetchAddressTransactions(address: string) {
 }
 
 async function fetchTransaction(txHash: string) {
-  const baseUrl = process.env.KASPA_REST_API_URL ?? "https://api.kaspa.org";
+  const baseUrl = getKaspaRestApiUrl();
   const url = new URL(
     `/transactions/${txHash}`,
     baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`,
