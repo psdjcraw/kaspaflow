@@ -172,6 +172,18 @@ select {
   margin-bottom: 0;
 }
 
+.warning-text {
+  background: rgba(183, 110, 0, 0.12);
+  border: 1px solid rgba(183, 110, 0, 0.28);
+  border-radius: 8px;
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin-bottom: 0;
+  padding: 11px 12px;
+}
+
 .counter {
   display: grid;
   gap: 24px;
@@ -291,6 +303,24 @@ select {
   margin-top: 4px;
 }
 
+.simulation-box {
+  align-items: center;
+  background: #fff8ed;
+  border: 1px solid rgba(183, 110, 0, 0.22);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+}
+
+.simulation-box span {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
 .expiry-meter {
   background: #f1f3ef;
   border-radius: 999px;
@@ -364,6 +394,7 @@ select {
 .refund-grid,
 .metric-grid,
 .chart-grid,
+.ops-health-grid,
 .sync-strip {
   display: grid;
   gap: 12px;
@@ -372,6 +403,35 @@ select {
 .admin-grid button,
 .refund-grid button {
   min-height: 46px;
+}
+
+.auto-sync-row {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+
+.auto-sync-row label {
+  align-items: center;
+  color: var(--ink);
+  display: flex;
+  font-size: 14px;
+  gap: 9px;
+}
+
+.auto-sync-row input {
+  min-width: auto;
+  padding: 0;
+}
+
+.auto-sync-row span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .employee-list {
@@ -411,10 +471,11 @@ select {
 }
 
 .metric-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .metric-grid div,
+.ops-health-grid div,
 .sync-strip div {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -422,6 +483,7 @@ select {
 }
 
 .metric-grid span,
+.ops-health-grid span,
 .sync-strip span {
   color: var(--muted);
   display: block;
@@ -430,8 +492,15 @@ select {
 }
 
 .metric-grid strong,
+.ops-health-grid strong,
 .sync-strip strong {
   font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.ops-health-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 12px;
 }
 
 .sync-strip {

@@ -30,6 +30,10 @@ export class MockKaspaPaymentWatcher implements KaspaPaymentWatcher {
       return null;
     }
 
+    if (isTerminalPaymentStatus(payment.status)) {
+      return getCurrentPaymentObservation(payment);
+    }
+
     if (Date.now() > new Date(payment.expiresAt).getTime()) {
       return { status: "expired" };
     }
@@ -66,6 +70,10 @@ export class KaspaRestPaymentWatcher implements KaspaPaymentWatcher {
       return null;
     }
 
+    if (isTerminalPaymentStatus(payment.status)) {
+      return getCurrentPaymentObservation(payment);
+    }
+
     if (Date.now() > new Date(payment.expiresAt).getTime()) {
       return { status: "expired" };
     }
@@ -74,6 +82,14 @@ export class KaspaRestPaymentWatcher implements KaspaPaymentWatcher {
     const match = findMatchingTransaction(transactions, payment);
 
     if (!match) {
+      if (payment.status === "seen" || payment.status === "underpaid") {
+        return {
+          status: payment.status,
+          txHash: payment.txHash,
+          receivedKasAmount: payment.receivedKasAmount,
+        };
+      }
+
       return { status: "waiting" };
     }
 
@@ -176,6 +192,20 @@ function getWatcher(): KaspaPaymentWatcher {
   }
 
   return new MockKaspaPaymentWatcher();
+}
+
+function isTerminalPaymentStatus(status: PaymentStatus) {
+  return status === "confirmed" || status === "overpaid" || status === "expired";
+}
+
+function getCurrentPaymentObservation(
+  payment: KaspaPaymentRequest,
+): ChainPaymentObservation {
+  return {
+    status: payment.status,
+    txHash: payment.txHash,
+    receivedKasAmount: payment.receivedKasAmount,
+  };
 }
 
 async function fetchAddressTransactions(address: string) {

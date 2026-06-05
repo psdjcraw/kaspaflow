@@ -12,6 +12,7 @@ export async function GET() {
     kaspaRestApiUrl: getKaspaRestApiUrl(),
     watcherMode: process.env.KASPA_WATCHER_MODE ?? "mock",
     adminAuthEnabled: isAdminAuthEnabled(),
+    simulationEnabled: process.env.KASPAFLOW_ENABLE_SIMULATION === "true",
     quote: await getKaspaQuote(),
     checkedAt: new Date().toISOString(),
   });

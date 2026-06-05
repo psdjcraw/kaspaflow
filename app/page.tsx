@@ -23,6 +23,16 @@ type PaymentResponse = {
   kaspaUri: string;
 };
 
+type HealthResponse = {
+  ok: boolean;
+  kaspaNetwork: string;
+  kaspaRestApiUrl: string;
+  watcherMode: string;
+  adminAuthEnabled: boolean;
+  simulationEnabled: boolean;
+  checkedAt: string;
+};
+
 type MerchantEmployee = {
   id: string;
   name: string;
@@ -49,6 +59,11 @@ type MerchantSettings = {
 
 type SalesSummary = {
   totals: {
+    fiatAmount: number;
+    kasAmount: number;
+    count: number;
+  };
+  simulated?: {
     fiatAmount: number;
     kasAmount: number;
     count: number;
@@ -88,6 +103,7 @@ type ExpirySummary = {
 };
 
 const QUOTE_REFRESH_INTERVAL_MS = 15_000;
+const AUTO_SYNC_INTERVAL_MS = 15_000;
 
 export default function Home() {
   const [merchantName, setMerchantName] = useState("KaspaFlow Cafe");
@@ -115,6 +131,9 @@ export default function Home() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
   const [expirySummary, setExpirySummary] = useState<ExpirySummary | null>(null);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+  const [lastAutoSyncAt, setLastAutoSyncAt] = useState("");
   const [adminToken, setAdminToken] = useState("");
   const [now, setNow] = useState(Date.now());
 
@@ -144,6 +163,7 @@ export default function Home() {
     void refreshAdmin();
     void refreshAnalytics();
     void refreshAudit();
+    void refreshHealth();
   }, []);
 
   useEffect(() => {
@@ -193,6 +213,22 @@ export default function Home() {
 
     return () => window.clearInterval(interval);
   }, [request]);
+
+  useEffect(() => {
+    if (!autoSyncEnabled) {
+      return;
+    }
+
+    void syncPayments(true);
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void syncPayments(true);
+      }
+    }, AUTO_SYNC_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
+  }, [autoSyncEnabled, adminToken]);
 
   async function refreshQuote() {
     try {
@@ -247,6 +283,14 @@ export default function Home() {
     }
   }
 
+  async function refreshHealth() {
+    try {
+      setHealth(await fetchJson<HealthResponse>("/api/health"));
+    } catch {
+      setHealth(null);
+    }
+  }
+
   async function refreshPayment(id: string) {
     try {
       const payload = await fetchJson<PaymentResponse>(`/api/payments/${id}`);
@@ -265,21 +309,31 @@ export default function Home() {
   }
 
   async function handleSyncPayments() {
-    setError("");
+    await syncPayments(false);
+  }
+
+  async function syncPayments(silent: boolean) {
+    if (!silent) {
+      setError("");
+    }
 
     try {
       const payload = await fetchJson<{ summary: SyncSummary }>(
-        "/api/payments/sync",
+        silent ? "/api/payments/sync?silent=1" : "/api/payments/sync",
         {
           method: "POST",
         },
       );
       setSyncSummary(payload.summary);
+      setLastAutoSyncAt(new Date().toISOString());
       await refreshPayments();
       await refreshAnalytics();
       await refreshAudit();
+      await refreshHealth();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unknown error.");
+      if (!silent) {
+        setError(caught instanceof Error ? caught.message : "Unknown error.");
+      }
     }
   }
 
@@ -297,6 +351,7 @@ export default function Home() {
       await refreshPayments();
       await refreshAnalytics();
       await refreshAudit();
+      await refreshHealth();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -525,6 +580,42 @@ export default function Home() {
     }
   }
 
+  async function handleSimulatePayment(status: KaspaPaymentRequest["status"]) {
+    if (!activePayment) {
+      return;
+    }
+
+    setError("");
+
+    try {
+      const payload = await fetchJson<PaymentResponse>(
+        `/api/payments/${activePayment.id}/simulate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status,
+            receivedKasAmount: activePayment.kasAmount,
+          }),
+        },
+      );
+      setRequest(payload.payment);
+      setKaspaUri(payload.kaspaUri);
+      setQrDataUrl(await createQr(payload.kaspaUri));
+      setPayments((current) =>
+        [payload.payment, ...current.filter((payment) =>
+          payment.id !== payload.payment.id
+        )].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      );
+      await refreshAnalytics();
+      await refreshAudit();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
   async function handleShowQr() {
     if (!kaspaUri) {
       return;
@@ -537,6 +628,9 @@ export default function Home() {
   const activePaymentTiming = activePayment
     ? getPaymentTiming(activePayment, now)
     : null;
+  const isUsingDefaultMerchantAddress =
+    merchantAddress.trim().toLowerCase() ===
+    DEFAULT_MERCHANT_ADDRESS.toLowerCase();
 
   return (
     <main className="app-shell">
@@ -601,6 +695,13 @@ export default function Home() {
                 onChange={(event) => setMerchantAddress(event.target.value)}
               />
             </label>
+
+            {isUsingDefaultMerchantAddress ? (
+              <p className="warning-text">
+                현재 더미 Kaspa 주소입니다. 실제 결제 전 상점 지갑 주소로
+                교체하세요.
+              </p>
+            ) : null}
 
             <div className="quote-box">
               <span>{quote?.pair ?? `KAS/${fiatCurrency}`}</span>
@@ -747,9 +848,39 @@ export default function Home() {
                   <span>{activePaymentTiming?.remainingLabel}</span>
                 </div>
 
+                {activePayment.simulated ? (
+                  <p className="warning-text">
+                    이 결제는 테스트 시뮬레이션입니다. 실제 매출 합계에서는
+                    제외됩니다.
+                  </p>
+                ) : null}
+
                 <div className="expiry-meter">
                   <i style={{ width: `${activePaymentTiming?.progress ?? 0}%` }} />
                 </div>
+
+                {health?.simulationEnabled ? (
+                  <div className="simulation-box">
+                    <div>
+                      <strong>테스트 시뮬레이션</strong>
+                      <span>실제 송금 없이 현재 결제 상태를 바꿉니다.</span>
+                    </div>
+                    <div className="button-group">
+                      <button
+                        type="button"
+                        onClick={() => void handleSimulatePayment("seen")}
+                      >
+                        입금 감지
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSimulatePayment("confirmed")}
+                      >
+                        결제 확정
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="qr-stage">
                   {qrDataUrl ? (
@@ -856,6 +987,10 @@ export default function Home() {
                 <span>KAS 수령</span>
                 <strong>{(analytics?.totals.kasAmount ?? 0).toFixed(4)} KAS</strong>
               </div>
+              <div>
+                <span>시뮬레이션</span>
+                <strong>{analytics?.simulated?.count ?? 0}</strong>
+              </div>
             </div>
 
             <div className="chart-grid">
@@ -868,6 +1003,9 @@ export default function Home() {
             <div className="section-heading">
               <h2>운영 동기화</h2>
               <div className="button-group">
+                <button type="button" onClick={() => void refreshHealth()}>
+                  상태 확인
+                </button>
                 <button type="button" onClick={() => void handleExpirePayments()}>
                   만료 정리
                 </button>
@@ -875,6 +1013,59 @@ export default function Home() {
                   전체 동기화
                 </button>
               </div>
+            </div>
+
+            <div className="ops-health-grid">
+              <div>
+                <span>체인</span>
+                <strong>{health?.kaspaNetwork ?? "-"}</strong>
+              </div>
+              <div>
+                <span>Watcher</span>
+                <strong>{health?.watcherMode ?? "-"}</strong>
+              </div>
+              <div>
+                <span>관리자 보호</span>
+                <strong>{health?.adminAuthEnabled ? "켜짐" : "꺼짐"}</strong>
+              </div>
+              <div>
+                <span>시뮬레이션</span>
+                <strong>{health?.simulationEnabled ? "켜짐" : "꺼짐"}</strong>
+              </div>
+              <div>
+                <span>REST API</span>
+                <strong>{health?.kaspaRestApiUrl ?? "-"}</strong>
+              </div>
+            </div>
+
+            {health && health.watcherMode !== "kaspa-rest" ? (
+              <p className="warning-text">
+                실제 입금 감시가 꺼져 있습니다. 운영 전 watcher를 kaspa-rest로
+                전환하세요.
+              </p>
+            ) : null}
+
+            {health && !health.adminAuthEnabled ? (
+              <p className="warning-text">
+                관리자 토큰 보호가 꺼져 있습니다. 외부에 노출하기 전
+                KASPAFLOW_ADMIN_TOKEN을 설정하세요.
+              </p>
+            ) : null}
+
+            <div className="auto-sync-row">
+              <label>
+                <input
+                  checked={autoSyncEnabled}
+                  type="checkbox"
+                  onChange={(event) => setAutoSyncEnabled(event.target.checked)}
+                />
+                자동 백그라운드 동기화
+              </label>
+              <span>
+                {lastAutoSyncAt
+                  ? `최근 ${formatQuoteTime(lastAutoSyncAt)}`
+                  : "대기 중"}
+              </span>
             </div>
 
             <div className="sync-strip">
@@ -943,7 +1134,7 @@ export default function Home() {
                       <span>{sale.kasAmount.toFixed(4)} KAS</span>
                     </div>
                     <span className={`status status-${sale.status}`}>
-                      {sale.status}
+                      {sale.simulated ? "sim" : sale.status}
                     </span>
                   </article>
                 ))

@@ -72,7 +72,9 @@ export function createPayment(input: CreatePaymentInput) {
 export function updatePaymentStatus(
   id: string,
   status: PaymentStatus,
-  values: Pick<KaspaPaymentRequest, "txHash" | "receivedKasAmount"> = {},
+  values: Partial<
+    Pick<KaspaPaymentRequest, "txHash" | "receivedKasAmount" | "simulated">
+  > = {},
 ) {
   const payment = store.payments.find((entry) => entry.id === id);
 
@@ -85,6 +87,7 @@ export function updatePaymentStatus(
   payment.txHash = values.txHash ?? payment.txHash;
   payment.receivedKasAmount =
     values.receivedKasAmount ?? payment.receivedKasAmount;
+  payment.simulated = values.simulated ?? payment.simulated;
 
   persistStore();
   return hydratePayment(payment);
@@ -112,12 +115,19 @@ export function updatePaymentRefund(
 
 export function getSalesSummary() {
   const payments = listPayments();
-  const confirmedPayments = payments.filter((payment) =>
+  const settledPayments = payments.filter((payment) =>
     payment.status === "confirmed" || payment.status === "overpaid"
+  );
+  const confirmedPayments = settledPayments.filter((payment) =>
+    !payment.simulated
+  );
+  const simulatedPayments = settledPayments.filter((payment) =>
+    payment.simulated
   );
 
   return {
     totals: summarizePayments(confirmedPayments),
+    simulated: summarizePayments(simulatedPayments),
     daily: summarizeByPeriod(confirmedPayments, "day"),
     weekly: summarizeByPeriod(confirmedPayments, "week"),
     statusCounts: payments.reduce<Record<string, number>>((counts, payment) => {
@@ -216,13 +226,20 @@ function hydratePayment(payment: KaspaPaymentRequest): KaspaPaymentRequest {
         fiatCurrency: "KRW" as const,
         rateFiatPerKas: payment.rateKrwPerKas ?? 350,
       };
+  const simulated = hydrated.simulated ??
+    hydrated.txHash?.startsWith("simulated-") ??
+    false;
 
   if (hydrated.refund) {
-    return hydrated;
+    return {
+      ...hydrated,
+      simulated,
+    };
   }
 
   return {
     ...hydrated,
+    simulated,
     refund: {
       status: "none",
     },

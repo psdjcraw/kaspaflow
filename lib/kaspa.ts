@@ -45,6 +45,7 @@ export type KaspaPaymentRequest = {
   status: PaymentStatus;
   txHash?: string;
   receivedKasAmount?: number;
+  simulated?: boolean;
   krwAmount?: number;
   rateKrwPerKas?: number;
   refund?: RefundRecord;

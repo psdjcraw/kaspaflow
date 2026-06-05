@@ -11,7 +11,7 @@ services:
       KASPA_WATCHER_MODE: kaspa-rest
       KASPA_NETWORK: mainnet
       KASPA_REST_API_URL: ""
-      KASPAFLOW_ADMIN_TOKEN: ""
+      KASPAFLOW_ADMIN_TOKEN: "${KASPAFLOW_ADMIN_TOKEN:?Set KASPAFLOW_ADMIN_TOKEN before production deploy}"
       KASPAFLOW_NOTIFY_WEBHOOK_URL: ""
     volumes:
       - kaspaflow-data:/app/data

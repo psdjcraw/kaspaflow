@@ -3,7 +3,10 @@
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 
-import type { KaspaPaymentRequest } from "@/lib/kaspa";
+import {
+  DEFAULT_MERCHANT_ADDRESS,
+  type KaspaPaymentRequest,
+} from "@/lib/kaspa";
 
 type PaymentResponse = {
   payment: KaspaPaymentRequest;
@@ -26,6 +29,9 @@ export function PaymentDetailClient({
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<"address" | "uri" | "">("");
+  const isDefaultAddress =
+    payment.merchantAddress.trim().toLowerCase() ===
+    DEFAULT_MERCHANT_ADDRESS.toLowerCase();
 
   useEffect(() => {
     void QRCode.toDataURL(kaspaUri, {
@@ -90,6 +96,20 @@ export function PaymentDetailClient({
           </span>
           <h2>{formatFiat(payment.fiatAmount, payment.fiatCurrency)}</h2>
           <p className="muted-copy">{getStatusDescription(payment)}</p>
+
+          {isDefaultAddress ? (
+            <p className="warning-text">
+              이 결제는 더미 Kaspa 주소를 사용 중입니다. 실제 송금에 쓰지
+              마세요.
+            </p>
+          ) : null}
+
+          {payment.simulated ? (
+            <p className="warning-text">
+              이 결제는 테스트 시뮬레이션입니다. 실제 매출 합계에서는
+              제외됩니다.
+            </p>
+          ) : null}
 
           <div className="pay-details">
             <div>
