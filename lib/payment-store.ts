@@ -1,6 +1,14 @@
 import "server-only";
 
 import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
+import path from "node:path";
+import {
   createPaymentRequest,
   isKaspaAddress,
   type KaspaPaymentRequest,
@@ -17,9 +25,7 @@ declare global {
 
 const store =
   globalThis.kaspaflowStore ??
-  (globalThis.kaspaflowStore = {
-    payments: [],
-  });
+  (globalThis.kaspaflowStore = loadStore());
 
 export type CreatePaymentInput = {
   merchantName: string;
@@ -49,6 +55,7 @@ export function createPayment(input: CreatePaymentInput) {
   );
 
   store.payments.unshift(payment);
+  persistStore();
   return payment;
 }
 
@@ -68,7 +75,36 @@ export function updatePaymentStatus(
   payment.receivedKasAmount =
     values.receivedKasAmount ?? payment.receivedKasAmount;
 
+  persistStore();
   return payment;
+}
+
+function getStorePath() {
+  const dataDir =
+    process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
+
+  return path.join(dataDir, "payments.json");
+}
+
+function loadStore(): StoreState {
+  const storePath = getStorePath();
+
+  if (!existsSync(storePath)) {
+    return { payments: [] };
+  }
+
+  try {
+    return JSON.parse(readFileSync(storePath, "utf8")) as StoreState;
+  } catch {
+    return { payments: [] };
+  }
+}
+
+function persistStore() {
+  const storePath = getStorePath();
+  mkdirSync(path.dirname(storePath), { recursive: true });
+  writeFileSync(`${storePath}.tmp`, JSON.stringify(store, null, 2));
+  renameSync(`${storePath}.tmp`, storePath);
 }
 
 function validatePaymentInput(input: CreatePaymentInput) {

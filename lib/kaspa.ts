@@ -1,5 +1,5 @@
 export const DEFAULT_MERCHANT_ADDRESS =
-  "kaspa:qz7placeholdermerchantaddressreplacebeforeliveuse";
+  "kaspa:q000000000000000000000000000000000000000000000000000000000000";
 
 export type PaymentStatus =
   | "waiting"
@@ -30,7 +30,7 @@ export function buildKaspaUri(request: KaspaPaymentRequest) {
 }
 
 export function isKaspaAddress(value: string) {
-  return /^kaspa:[a-z0-9]{20,}$/i.test(value.trim());
+  return /^kaspa:[a-z0-9]{61,63}$/i.test(value.trim());
 }
 
 export function krwToKas(krwAmount: number, rateKrwPerKas: number) {

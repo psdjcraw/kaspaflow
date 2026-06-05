@@ -11,7 +11,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const payment = syncPaymentFromWatcher(id);
+  const payment = await syncPaymentFromWatcher(id);
 
   if (!payment) {
     return NextResponse.json({ error: "Payment not found." }, { status: 404 });
