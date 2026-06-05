@@ -69,6 +69,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       payment: await verifyAndStoreRefund(id, txHash, customerAddress, kasAmount),
     });
   } catch (error) {
+    appendAuditEvent({
+      type: "refund.failed",
+      message: error instanceof Error ? error.message : "Invalid refund request.",
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Invalid refund request.",

@@ -46,6 +46,10 @@ type SalesSummary = {
   daily: SalesPeriod[];
   weekly: SalesPeriod[];
   statusCounts: Record<string, number>;
+  expiry?: {
+    lastRun: string;
+    count: number;
+  };
 };
 
 type SalesPeriod = {
@@ -66,6 +70,11 @@ type AuditEvent = {
 type SyncSummary = {
   checked: number;
   changed: number;
+};
+
+type ExpirySummary = {
+  changed: number;
+  expiredIds: string[];
 };
 
 const QUOTE_REFRESH_INTERVAL_MS = 15_000;
@@ -93,6 +102,8 @@ export default function Home() {
   const [refundReason, setRefundReason] = useState("");
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
+  const [expirySummary, setExpirySummary] = useState<ExpirySummary | null>(null);
+  const [now, setNow] = useState(Date.now());
 
   const parsedFiatAmount = useMemo(() => parseAmount(fiatAmount), [fiatAmount]);
 
@@ -120,6 +131,12 @@ export default function Home() {
     void refreshAdmin();
     void refreshAnalytics();
     void refreshAudit();
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -214,6 +231,25 @@ export default function Home() {
         },
       );
       setSyncSummary(payload.summary);
+      await refreshPayments();
+      await refreshAnalytics();
+      await refreshAudit();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleExpirePayments() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ summary: ExpirySummary }>(
+        "/api/payments/expire",
+        {
+          method: "POST",
+        },
+      );
+      setExpirySummary(payload.summary);
       await refreshPayments();
       await refreshAnalytics();
       await refreshAudit();
@@ -393,6 +429,9 @@ export default function Home() {
   }
 
   const activePayment = request ?? payments[0] ?? null;
+  const activePaymentTiming = activePayment
+    ? getPaymentTiming(activePayment, now)
+    : null;
 
   return (
     <main className="app-shell">
@@ -546,8 +585,20 @@ export default function Home() {
                     </h2>
                   </div>
                   <span className={`status status-${activePayment.status}`}>
-                    {activePayment.status}
+                    {getStatusLabel(activePayment.status)}
                   </span>
+                </div>
+
+                <div className="status-card">
+                  <div>
+                    <strong>{getStatusHeadline(activePayment.status)}</strong>
+                    <span>{getStatusDescription(activePayment)}</span>
+                  </div>
+                  <span>{activePaymentTiming?.remainingLabel}</span>
+                </div>
+
+                <div className="expiry-meter">
+                  <i style={{ width: `${activePaymentTiming?.progress ?? 0}%` }} />
                 </div>
 
                 <div className="qr-stage">
@@ -568,12 +619,21 @@ export default function Home() {
                   <div>
                     <span>만료</span>
                     <strong>
-                      {new Date(activePayment.expiresAt).toLocaleTimeString(
-                        "ko-KR",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
+                      {activePaymentTiming?.expiresAtLabel}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>받은 KAS</span>
+                    <strong>
+                      {(activePayment.receivedKasAmount ?? 0).toFixed(8)} KAS
+                    </strong>
+                  </div>
+                  <div>
+                    <span>적용 시세</span>
+                    <strong>
+                      {formatFiat(
+                        activePayment.rateFiatPerKas,
+                        activePayment.fiatCurrency,
                       )}
                     </strong>
                   </div>
@@ -657,9 +717,14 @@ export default function Home() {
           <div className="sales-panel">
             <div className="section-heading">
               <h2>운영 동기화</h2>
-              <button type="button" onClick={() => void handleSyncPayments()}>
-                전체 동기화
-              </button>
+              <div className="button-group">
+                <button type="button" onClick={() => void handleExpirePayments()}>
+                  만료 정리
+                </button>
+                <button type="button" onClick={() => void handleSyncPayments()}>
+                  전체 동기화
+                </button>
+              </div>
             </div>
 
             <div className="sync-strip">
@@ -678,6 +743,10 @@ export default function Home() {
               <div>
                 <span>확정</span>
                 <strong>{analytics?.statusCounts.confirmed ?? 0}</strong>
+              </div>
+              <div>
+                <span>만료 정리</span>
+                <strong>{expirySummary?.changed ?? analytics?.expiry?.count ?? 0}</strong>
               </div>
             </div>
 
@@ -714,6 +783,9 @@ export default function Home() {
                       <strong>{sale.id}</strong>
                       <span>{sale.merchantName}</span>
                     </button>
+                    <a className="detail-link" href={`/payments/${sale.id}`}>
+                      상세
+                    </a>
                     <div>
                       <strong>
                         {formatFiat(sale.fiatAmount, sale.fiatCurrency)}
@@ -759,6 +831,73 @@ function SalesChart({ title, rows }: { title: string; rows: SalesPeriod[] }) {
       </div>
     </section>
   );
+}
+
+function getPaymentTiming(payment: KaspaPaymentRequest, now: number) {
+  const createdAt = new Date(payment.createdAt).getTime();
+  const expiresAt = new Date(payment.expiresAt).getTime();
+  const totalMs = Math.max(1, expiresAt - createdAt);
+  const remainingMs = Math.max(0, expiresAt - now);
+  const elapsedMs = Math.min(totalMs, Math.max(0, now - createdAt));
+
+  return {
+    expiresAtLabel: new Date(payment.expiresAt).toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    progress: payment.status === "expired"
+      ? 100
+      : Math.round((elapsedMs / totalMs) * 100),
+    remainingLabel: payment.status === "expired"
+      ? "만료됨"
+      : `${formatDuration(remainingMs)} 남음`,
+  };
+}
+
+function getStatusLabel(status: KaspaPaymentRequest["status"]) {
+  const labels: Record<KaspaPaymentRequest["status"], string> = {
+    waiting: "대기",
+    seen: "입금 감지",
+    confirmed: "확정",
+    underpaid: "부족",
+    overpaid: "초과",
+    expired: "만료",
+  };
+
+  return labels[status];
+}
+
+function getStatusHeadline(status: KaspaPaymentRequest["status"]) {
+  const headlines: Record<KaspaPaymentRequest["status"], string> = {
+    waiting: "입금 대기 중",
+    seen: "체인에서 입금을 감지했습니다",
+    confirmed: "결제가 확정됐습니다",
+    underpaid: "입금액이 부족합니다",
+    overpaid: "입금액이 초과됐습니다",
+    expired: "결제 시간이 만료됐습니다",
+  };
+
+  return headlines[status];
+}
+
+function getStatusDescription(payment: KaspaPaymentRequest) {
+  if (payment.receivedKasAmount) {
+    return `${payment.receivedKasAmount.toFixed(8)} KAS 수신`;
+  }
+
+  if (payment.status === "expired") {
+    return "새 결제 요청을 생성해야 합니다.";
+  }
+
+  return "QR 또는 Kaspa URI로 직접 입금을 기다립니다.";
+}
+
+function formatDuration(milliseconds: number) {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function formatFiat(amount: number, currency: FiatCurrency) {

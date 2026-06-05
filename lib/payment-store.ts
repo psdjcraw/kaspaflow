@@ -17,6 +17,7 @@ import {
   type PaymentStatus,
   type RefundRecord,
 } from "./kaspa";
+import { getExpiryStats, markExpired } from "./payment-expiry";
 
 type StoreState = {
   payments: KaspaPaymentRequest[];
@@ -39,6 +40,8 @@ export type CreatePaymentInput = {
 };
 
 export function listPayments() {
+  expireExpiredPayments();
+
   return store.payments.map(hydratePayment).sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
@@ -121,6 +124,7 @@ export function getSalesSummary() {
       counts[payment.status] = (counts[payment.status] ?? 0) + 1;
       return counts;
     }, {}),
+    expiry: getExpiryStats(),
   };
 }
 
@@ -172,6 +176,35 @@ function validatePaymentInput(input: CreatePaymentInput) {
   if (!Number.isFinite(input.rateFiatPerKas) || input.rateFiatPerKas <= 0) {
     throw new Error("Fiat/KAS rate must be greater than zero.");
   }
+}
+
+export function expireExpiredPayments() {
+  const now = new Date();
+  const expiredIds: string[] = [];
+
+  store.payments.forEach((payment) => {
+    if (
+      payment.status === "waiting" ||
+      payment.status === "seen" ||
+      payment.status === "underpaid"
+    ) {
+      const expiresAt = new Date(payment.expiresAt);
+      if (expiresAt < now) {
+        payment.status = "expired";
+        expiredIds.push(payment.id);
+      }
+    }
+  });
+
+  if (expiredIds.length) {
+    markExpired(expiredIds);
+    persistStore();
+  }
+
+  return {
+    changed: expiredIds.length,
+    expiredIds,
+  };
 }
 
 function hydratePayment(payment: KaspaPaymentRequest): KaspaPaymentRequest {

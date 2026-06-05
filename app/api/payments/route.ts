@@ -41,6 +41,11 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
+    appendAuditEvent({
+      type: "payment.create-failed",
+      message: error instanceof Error ? error.message : "Invalid request.",
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Invalid request.",

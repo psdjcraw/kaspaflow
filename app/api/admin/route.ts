@@ -62,6 +62,11 @@ export async function POST(request: NextRequest) {
       settings,
     });
   } catch (error) {
+    appendAuditEvent({
+      type: "admin.failed",
+      message: error instanceof Error ? error.message : "Invalid admin request.",
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Invalid admin request.",

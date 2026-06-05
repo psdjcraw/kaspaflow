@@ -32,7 +32,8 @@ a {
 }
 
 button,
-.secondary-button {
+.secondary-button,
+.detail-link {
   border: 0;
   border-radius: 8px;
   background: var(--ink);
@@ -191,6 +192,11 @@ select {
   gap: 16px;
 }
 
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
 .status {
   border-radius: 999px;
   color: var(--muted);
@@ -260,6 +266,39 @@ select {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.status-card {
+  align-items: center;
+  background: #f5faf7;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+}
+
+.status-card span {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.expiry-meter {
+  background: #f1f3ef;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.expiry-meter i {
+  background: var(--kaspa-dark);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width 0.2s ease;
 }
 
 .pay-details div {
@@ -390,7 +429,7 @@ select {
 }
 
 .sync-strip {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .chart-grid {
@@ -471,7 +510,7 @@ select {
   border-radius: 8px;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(0, 1.3fr) minmax(120px, 0.7fr) auto;
+  grid-template-columns: minmax(0, 1.3fr) auto minmax(120px, 0.7fr) auto;
   padding: 14px;
 }
 
@@ -481,6 +520,13 @@ select {
   min-width: 0;
   padding: 0;
   text-align: left;
+}
+
+.detail-link {
+  background: #f1f3ef;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 8px 10px;
 }
 
 .sale-row strong {
@@ -497,6 +543,43 @@ select {
 .empty-state p {
   color: var(--muted);
   margin-bottom: 0;
+}
+
+.detail-page {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 22px;
+  margin: 0 auto;
+  max-width: 980px;
+  padding: 28px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-item,
+.detail-block {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+}
+
+.detail-item span,
+.detail-block span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.detail-block code {
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 840px) {
@@ -528,7 +611,14 @@ select {
   .sync-strip,
   .chart-grid,
   .bar-row,
-  .audit-row {
+  .audit-row,
+  .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .button-group,
+  .status-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
