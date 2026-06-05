@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
+import { startBackgroundPaymentSync } from "@/lib/background-sync";
 import { requireAdminAuth } from "@/lib/auth";
 import { buildKaspaUri } from "@/lib/kaspa";
 import { createPayment, listPayments } from "@/lib/payment-store";
@@ -8,6 +9,8 @@ import { sendNotification } from "@/lib/notifications";
 import { getKaspaQuote } from "@/lib/price";
 
 export async function GET() {
+  startBackgroundPaymentSync();
+
   return NextResponse.json({ payments: listPayments() });
 }
 
@@ -28,6 +31,7 @@ export async function POST(request: NextRequest) {
       fiatCurrency: quote.fiatCurrency,
       rateFiatPerKas: quote.rateFiatPerKas,
     });
+    startBackgroundPaymentSync();
 
     appendAuditEvent({
       type: "payment.created",
