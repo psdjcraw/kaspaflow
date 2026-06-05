@@ -28,7 +28,7 @@ export default function Home() {
   const [merchantAddress, setMerchantAddress] = useState(
     DEFAULT_MERCHANT_ADDRESS,
   );
-  const [fiatAmount, setFiatAmount] = useState(21000);
+  const [fiatAmount, setFiatAmount] = useState("21000");
   const [fiatCurrency, setFiatCurrency] = useState<FiatCurrency>("KRW");
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [request, setRequest] = useState<KaspaPaymentRequest | null>(null);
@@ -38,14 +38,16 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const parsedFiatAmount = useMemo(() => parseAmount(fiatAmount), [fiatAmount]);
+
   const estimatedKas = useMemo(() => {
     if (!quote || quote.rateFiatPerKas <= 0) {
       return 0;
     }
 
-    return Math.ceil((fiatAmount / quote.rateFiatPerKas) * 100_000_000) /
+    return Math.ceil((parsedFiatAmount / quote.rateFiatPerKas) * 100_000_000) /
       100_000_000;
-  }, [fiatAmount, quote]);
+  }, [parsedFiatAmount, quote]);
 
   useEffect(() => {
     void refreshQuote();
@@ -104,6 +106,22 @@ export default function Home() {
   async function handleCreatePayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    const normalizedFiatAmount = normalizeFiatAmount(
+      fiatAmount,
+      fiatCurrency,
+    );
+
+    if (!normalizedFiatAmount) {
+      setError(
+        fiatCurrency === "KRW" || fiatCurrency === "JPY"
+          ? "결제 금액은 1 이상 정수로 입력해 주세요."
+          : "결제 금액은 0.01 이상으로 입력해 주세요.",
+      );
+      return;
+    }
+
+    setFiatAmount(formatAmountInput(normalizedFiatAmount, fiatCurrency));
     setIsSubmitting(true);
 
     try {
@@ -117,7 +135,7 @@ export default function Home() {
         body: JSON.stringify({
           merchantName,
           merchantAddress,
-          fiatAmount,
+          fiatAmount: normalizedFiatAmount,
           fiatCurrency,
         }),
         },
@@ -163,7 +181,11 @@ export default function Home() {
             </p>
           </div>
 
-          <form className="payment-form" onSubmit={handleCreatePayment}>
+          <form
+            className="payment-form"
+            noValidate
+            onSubmit={handleCreatePayment}
+          >
             <label>
               매장명
               <input
@@ -175,11 +197,13 @@ export default function Home() {
             <label>
               결제 금액
               <input
-                min="0.01"
-                step={fiatCurrency === "KRW" || fiatCurrency === "JPY" ? "100" : "0.01"}
-                type="number"
+                inputMode={
+                  fiatCurrency === "KRW" || fiatCurrency === "JPY"
+                    ? "numeric"
+                    : "decimal"
+                }
                 value={fiatAmount}
-                onChange={(event) => setFiatAmount(Number(event.target.value))}
+                onChange={(event) => setFiatAmount(event.target.value)}
               />
             </label>
 
@@ -334,6 +358,33 @@ function formatFiat(amount: number, currency: FiatCurrency) {
     currency,
     maximumFractionDigits: currency === "KRW" || currency === "JPY" ? 0 : 2,
   }).format(amount);
+}
+
+function parseAmount(value: string) {
+  const normalized = value.replaceAll(",", "").trim();
+  const amount = Number(normalized);
+
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function normalizeFiatAmount(value: string, currency: FiatCurrency) {
+  const amount = parseAmount(value);
+
+  if (currency === "KRW" || currency === "JPY") {
+    const rounded = Math.round(amount);
+    return rounded > 0 ? rounded : null;
+  }
+
+  const rounded = Math.round(amount * 100) / 100;
+  return rounded >= 0.01 ? rounded : null;
+}
+
+function formatAmountInput(amount: number, currency: FiatCurrency) {
+  if (currency === "KRW" || currency === "JPY") {
+    return String(Math.round(amount));
+  }
+
+  return amount.toFixed(2).replace(/\.?0+$/, "");
 }
 
 async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit) {
