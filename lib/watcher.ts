@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { KaspaPaymentRequest, PaymentStatus } from "./kaspa";
-import { getPayment, updatePaymentStatus } from "./payment-store";
+import { getPayment, listPayments, updatePaymentStatus } from "./payment-store";
 
 export type ChainPaymentObservation = {
   status: PaymentStatus;
@@ -95,6 +95,36 @@ export async function syncPaymentFromWatcher(paymentId: string) {
     txHash: observation.txHash,
     receivedKasAmount: observation.receivedKasAmount,
   });
+}
+
+export async function syncOpenPaymentsFromWatcher() {
+  const openPayments = listPayments().filter((payment) =>
+    ["waiting", "seen", "underpaid"].includes(payment.status)
+  );
+  const results = [];
+
+  for (const payment of openPayments) {
+    const beforeStatus = payment.status;
+    const syncedPayment = await syncPaymentFromWatcher(payment.id);
+
+    if (syncedPayment) {
+      results.push({
+        id: syncedPayment.id,
+        beforeStatus,
+        afterStatus: syncedPayment.status,
+        txHash: syncedPayment.txHash,
+        receivedKasAmount: syncedPayment.receivedKasAmount,
+      });
+    }
+  }
+
+  return {
+    checked: openPayments.length,
+    changed: results.filter((result) =>
+      result.beforeStatus !== result.afterStatus
+    ).length,
+    results,
+  };
 }
 
 export async function verifyRefundTransaction(

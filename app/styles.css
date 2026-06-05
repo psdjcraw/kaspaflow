@@ -319,7 +319,8 @@ select {
 .admin-grid,
 .refund-grid,
 .metric-grid,
-.chart-grid {
+.chart-grid,
+.sync-strip {
   display: grid;
   gap: 12px;
 }
@@ -368,21 +369,28 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.metric-grid div {
+.metric-grid div,
+.sync-strip div {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
 }
 
-.metric-grid span {
+.metric-grid span,
+.sync-strip span {
   color: var(--muted);
   display: block;
   font-size: 12px;
   margin-bottom: 6px;
 }
 
-.metric-grid strong {
+.metric-grid strong,
+.sync-strip strong {
   font-size: 20px;
+}
+
+.sync-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .chart-grid {
@@ -427,6 +435,29 @@ select {
   border-radius: inherit;
   display: block;
   height: 100%;
+}
+
+.audit-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.audit-row {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.audit-row span,
+.audit-row time {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
 }
 
 .sales-list {
@@ -494,8 +525,10 @@ select {
   }
 
   .metric-grid,
+  .sync-strip,
   .chart-grid,
-  .bar-row {
+  .bar-row,
+  .audit-row {
     grid-template-columns: 1fr;
   }
 }

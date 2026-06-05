@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { appendAuditEvent } from "@/lib/audit-store";
 import {
   getMerchantSettings,
   setEmployeeActive,
@@ -17,26 +18,48 @@ export async function POST(request: NextRequest) {
     const action = String(body.action ?? "settings");
 
     if (action === "employee") {
+      const settings = upsertEmployee(body.employee ?? {});
+      appendAuditEvent({
+        type: "admin.employee",
+        message: "Updated merchant employee list.",
+      });
+
       return NextResponse.json({
-        settings: upsertEmployee(body.employee ?? {}),
+        settings,
       });
     }
 
     if (action === "employee-status") {
+      const settings = setEmployeeActive(
+        String(body.id ?? ""),
+        Boolean(body.active),
+      );
+      appendAuditEvent({
+        type: "admin.employee-status",
+        message: "Changed employee active status.",
+        metadata: {
+          employeeId: String(body.id ?? ""),
+          active: Boolean(body.active),
+        },
+      });
+
       return NextResponse.json({
-        settings: setEmployeeActive(
-          String(body.id ?? ""),
-          Boolean(body.active),
-        ),
+        settings,
       });
     }
 
+    const settings = updateMerchantSettings({
+      merchantName: body.merchantName,
+      merchantAddress: body.merchantAddress,
+      defaultCurrency: body.defaultCurrency,
+    });
+    appendAuditEvent({
+      type: "admin.settings",
+      message: "Updated merchant settings.",
+    });
+
     return NextResponse.json({
-      settings: updateMerchantSettings({
-        merchantName: body.merchantName,
-        merchantAddress: body.merchantAddress,
-        defaultCurrency: body.defaultCurrency,
-      }),
+      settings,
     });
   } catch (error) {
     return NextResponse.json(

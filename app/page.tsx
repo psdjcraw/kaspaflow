@@ -55,6 +55,19 @@ type SalesPeriod = {
   count: number;
 };
 
+type AuditEvent = {
+  id: string;
+  type: string;
+  message: string;
+  paymentId?: string;
+  createdAt: string;
+};
+
+type SyncSummary = {
+  checked: number;
+  changed: number;
+};
+
 const QUOTE_REFRESH_INTERVAL_MS = 15_000;
 
 export default function Home() {
@@ -78,6 +91,8 @@ export default function Home() {
   const [refundAddress, setRefundAddress] = useState("");
   const [refundTxHash, setRefundTxHash] = useState("");
   const [refundReason, setRefundReason] = useState("");
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
 
   const parsedFiatAmount = useMemo(() => parseAmount(fiatAmount), [fiatAmount]);
 
@@ -104,6 +119,7 @@ export default function Home() {
     void refreshPayments();
     void refreshAdmin();
     void refreshAnalytics();
+    void refreshAudit();
   }, []);
 
   useEffect(() => {
@@ -162,6 +178,15 @@ export default function Home() {
     }
   }
 
+  async function refreshAudit() {
+    try {
+      const payload = await fetchJson<{ events: AuditEvent[] }>("/api/audit");
+      setAuditEvents(payload.events);
+    } catch {
+      return;
+    }
+  }
+
   async function refreshPayment(id: string) {
     try {
       const payload = await fetchJson<PaymentResponse>(`/api/payments/${id}`);
@@ -172,8 +197,28 @@ export default function Home() {
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       );
       void refreshAnalytics();
+      void refreshAudit();
     } catch {
       return;
+    }
+  }
+
+  async function handleSyncPayments() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<{ summary: SyncSummary }>(
+        "/api/payments/sync",
+        {
+          method: "POST",
+        },
+      );
+      setSyncSummary(payload.summary);
+      await refreshPayments();
+      await refreshAnalytics();
+      await refreshAudit();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
   }
 
@@ -226,6 +271,7 @@ export default function Home() {
       ]);
       setQrDataUrl(await createQr(nextKaspaUri));
       void refreshAnalytics();
+      void refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     } finally {
@@ -249,6 +295,7 @@ export default function Home() {
         }),
       });
       setSettings(payload.settings);
+      void refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -274,6 +321,7 @@ export default function Home() {
       setSettings(payload.settings);
       setEmployeeName("");
       setEmployeeRole("cashier");
+      void refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -295,6 +343,7 @@ export default function Home() {
         }),
       });
       setSettings(payload.settings);
+      void refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -329,6 +378,7 @@ export default function Home() {
           payment.id !== payload.payment.id
         )].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       );
+      void refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -601,6 +651,50 @@ export default function Home() {
             <div className="chart-grid">
               <SalesChart title="일별 매출" rows={analytics?.daily ?? []} />
               <SalesChart title="주별 매출" rows={analytics?.weekly ?? []} />
+            </div>
+          </div>
+
+          <div className="sales-panel">
+            <div className="section-heading">
+              <h2>운영 동기화</h2>
+              <button type="button" onClick={() => void handleSyncPayments()}>
+                전체 동기화
+              </button>
+            </div>
+
+            <div className="sync-strip">
+              <div>
+                <span>확인한 결제</span>
+                <strong>{syncSummary?.checked ?? 0}</strong>
+              </div>
+              <div>
+                <span>상태 변경</span>
+                <strong>{syncSummary?.changed ?? 0}</strong>
+              </div>
+              <div>
+                <span>대기</span>
+                <strong>{analytics?.statusCounts.waiting ?? 0}</strong>
+              </div>
+              <div>
+                <span>확정</span>
+                <strong>{analytics?.statusCounts.confirmed ?? 0}</strong>
+              </div>
+            </div>
+
+            <div className="audit-list">
+              {auditEvents.length ? (
+                auditEvents.slice(0, 8).map((event) => (
+                  <article className="audit-row" key={event.id}>
+                    <div>
+                      <strong>{event.type}</strong>
+                      <span>{event.message}</span>
+                    </div>
+                    <time>{formatQuoteTime(event.createdAt)}</time>
+                  </article>
+                ))
+              ) : (
+                <p className="muted-copy">아직 운영 로그가 없습니다.</p>
+              )}
             </div>
           </div>
 

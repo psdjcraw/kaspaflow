@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { appendAuditEvent } from "@/lib/audit-store";
 import { isKaspaAddress } from "@/lib/kaspa";
 import { getPayment, updatePaymentRefund } from "@/lib/payment-store";
 import { verifyRefundTransaction } from "@/lib/watcher";
@@ -49,6 +50,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     };
 
     const nextPayment = updatePaymentRefund(id, refund);
+    appendAuditEvent({
+      type: txHash ? "refund.tx-provided" : "refund.requested",
+      message: txHash
+        ? `Refund transaction provided for ${id}.`
+        : `Refund requested for ${id}.`,
+      paymentId: id,
+      metadata: {
+        kasAmount,
+      },
+    });
 
     if (!nextPayment || !txHash) {
       return NextResponse.json({ payment: nextPayment });
@@ -98,6 +109,14 @@ async function verifyAndStoreRefund(
     kasAmount,
   );
   const now = new Date().toISOString();
+  appendAuditEvent({
+    type: `refund.${verification.status}`,
+    message: verification.note,
+    paymentId,
+    metadata: {
+      kasAmount,
+    },
+  });
 
   return updatePaymentRefund(paymentId, {
     status: verification.status,

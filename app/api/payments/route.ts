@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { appendAuditEvent } from "@/lib/audit-store";
 import { buildKaspaUri } from "@/lib/kaspa";
 import { createPayment, listPayments } from "@/lib/payment-store";
 import { getKaspaQuote } from "@/lib/price";
@@ -18,6 +19,17 @@ export async function POST(request: NextRequest) {
       fiatAmount: Number(body.fiatAmount ?? body.krwAmount),
       fiatCurrency: quote.fiatCurrency,
       rateFiatPerKas: quote.rateFiatPerKas,
+    });
+
+    appendAuditEvent({
+      type: "payment.created",
+      message: `Created payment ${payment.id}.`,
+      paymentId: payment.id,
+      metadata: {
+        fiatAmount: payment.fiatAmount,
+        fiatCurrency: payment.fiatCurrency,
+        kasAmount: payment.kasAmount,
+      },
     });
 
     return NextResponse.json(

@@ -24,6 +24,8 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Refund request tracking with refund transaction hash verification
 - Merchant admin settings and employee list management
 - Daily and weekly sales dashboard summaries
+- Bulk watcher sync for all open payments
+- File-backed audit log for operational events
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -86,12 +88,14 @@ Mock defaults are only used when live requests fail or when
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
+- `POST /api/payments/sync` syncs every open payment with the active watcher.
 - `POST /api/payments/:id/refund` records a refund request and optionally
   verifies a provided refund transaction hash.
 - `GET /api/payments/:id/refund` re-checks the stored refund transaction hash.
 - `GET /api/admin` returns merchant settings and employees.
 - `POST /api/admin` updates merchant settings or employees.
 - `GET /api/analytics` returns total, daily, weekly, and status summaries.
+- `GET /api/audit` returns recent payment, refund, admin, and sync events.
 - `GET /api/sales.csv` downloads the current sales log.
 
 Example payment creation:
