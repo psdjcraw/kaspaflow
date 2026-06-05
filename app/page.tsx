@@ -65,13 +65,17 @@ export default function Home() {
   }, [request]);
 
   async function refreshQuote() {
-    const response = await fetch(`/api/quote?fiat=${fiatCurrency}`);
-    setQuote(await response.json());
+    try {
+      setQuote(await fetchJson<QuoteResponse>(`/api/quote?fiat=${fiatCurrency}`));
+    } catch {
+      setQuote(null);
+    }
   }
 
   async function refreshPayments() {
-    const response = await fetch("/api/payments");
-    const payload = await response.json();
+    const payload = await fetchJson<{ payments: KaspaPaymentRequest[] }>(
+      "/api/payments",
+    );
     setPayments(payload.payments);
 
     if (!request && payload.payments[0]) {
@@ -84,19 +88,17 @@ export default function Home() {
   }
 
   async function refreshPayment(id: string) {
-    const response = await fetch(`/api/payments/${id}`);
-
-    if (!response.ok) {
+    try {
+      const payload = await fetchJson<PaymentResponse>(`/api/payments/${id}`);
+      setRequest(payload.payment);
+      setKaspaUri(payload.kaspaUri);
+      setPayments((current) =>
+        [payload.payment, ...current.filter((payment) => payment.id !== id)]
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      );
+    } catch {
       return;
     }
-
-    const payload = (await response.json()) as PaymentResponse;
-    setRequest(payload.payment);
-    setKaspaUri(payload.kaspaUri);
-    setPayments((current) =>
-      [payload.payment, ...current.filter((payment) => payment.id !== id)]
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    );
   }
 
   async function handleCreatePayment(event: FormEvent<HTMLFormElement>) {
@@ -105,7 +107,9 @@ export default function Home() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/payments", {
+      const payload = await fetchJson<PaymentResponse & { quote: QuoteResponse }>(
+        "/api/payments",
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,12 +120,8 @@ export default function Home() {
           fiatAmount,
           fiatCurrency,
         }),
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to create payment.");
-      }
+        },
+      );
 
       const nextPayment = payload.payment as KaspaPaymentRequest;
       const nextKaspaUri = payload.kaspaUri as string;
@@ -334,6 +334,33 @@ function formatFiat(amount: number, currency: FiatCurrency) {
     currency,
     maximumFractionDigits: currency === "KRW" || currency === "JPY" ? 0 : 2,
   }).format(amount);
+}
+
+async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Request failed.");
+    }
+
+    return payload as T;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("요청 시간이 초과됐습니다. dev server 상태를 확인하세요.");
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 function createQr(payload: string) {
