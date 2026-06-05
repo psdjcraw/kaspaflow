@@ -26,6 +26,7 @@ body {
 
 button,
 input,
+select,
 a {
   font: inherit;
 }
@@ -122,7 +123,8 @@ label {
   gap: 7px;
 }
 
-input {
+input,
+select {
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);

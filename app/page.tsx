@@ -4,13 +4,16 @@ import QRCode from "qrcode";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_MERCHANT_ADDRESS,
+  SUPPORTED_FIAT_CURRENCIES,
   buildKaspaUri,
+  type FiatCurrency,
   type KaspaPaymentRequest,
 } from "@/lib/kaspa";
 
 type QuoteResponse = {
-  pair: "KAS/KRW";
-  rateKrwPerKas: number;
+  pair: `KAS/${FiatCurrency}`;
+  fiatCurrency: FiatCurrency;
+  rateFiatPerKas: number;
   source: string;
   quotedAt: string;
 };
@@ -20,18 +23,13 @@ type PaymentResponse = {
   kaspaUri: string;
 };
 
-const formatKrw = new Intl.NumberFormat("ko-KR", {
-  style: "currency",
-  currency: "KRW",
-  maximumFractionDigits: 0,
-});
-
 export default function Home() {
   const [merchantName, setMerchantName] = useState("KaspaFlow Cafe");
   const [merchantAddress, setMerchantAddress] = useState(
     DEFAULT_MERCHANT_ADDRESS,
   );
-  const [krwAmount, setKrwAmount] = useState(21000);
+  const [fiatAmount, setFiatAmount] = useState(21000);
+  const [fiatCurrency, setFiatCurrency] = useState<FiatCurrency>("KRW");
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [request, setRequest] = useState<KaspaPaymentRequest | null>(null);
   const [payments, setPayments] = useState<KaspaPaymentRequest[]>([]);
@@ -41,18 +39,18 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const estimatedKas = useMemo(() => {
-    if (!quote || quote.rateKrwPerKas <= 0) {
+    if (!quote || quote.rateFiatPerKas <= 0) {
       return 0;
     }
 
-    return Math.ceil((krwAmount / quote.rateKrwPerKas) * 100_000_000) /
+    return Math.ceil((fiatAmount / quote.rateFiatPerKas) * 100_000_000) /
       100_000_000;
-  }, [krwAmount, quote]);
+  }, [fiatAmount, quote]);
 
   useEffect(() => {
     void refreshQuote();
     void refreshPayments();
-  }, []);
+  }, [fiatCurrency]);
 
   useEffect(() => {
     if (!request || request.status === "confirmed" || request.status === "expired") {
@@ -67,7 +65,7 @@ export default function Home() {
   }, [request]);
 
   async function refreshQuote() {
-    const response = await fetch("/api/quote");
+    const response = await fetch(`/api/quote?fiat=${fiatCurrency}`);
     setQuote(await response.json());
   }
 
@@ -115,7 +113,8 @@ export default function Home() {
         body: JSON.stringify({
           merchantName,
           merchantAddress,
-          krwAmount,
+          fiatAmount,
+          fiatCurrency,
         }),
       });
       const payload = await response.json();
@@ -176,12 +175,28 @@ export default function Home() {
             <label>
               결제 금액
               <input
-                min="100"
-                step="100"
+                min="0.01"
+                step={fiatCurrency === "KRW" || fiatCurrency === "JPY" ? "100" : "0.01"}
                 type="number"
-                value={krwAmount}
-                onChange={(event) => setKrwAmount(Number(event.target.value))}
+                value={fiatAmount}
+                onChange={(event) => setFiatAmount(Number(event.target.value))}
               />
+            </label>
+
+            <label>
+              기준 통화
+              <select
+                value={fiatCurrency}
+                onChange={(event) =>
+                  setFiatCurrency(event.target.value as FiatCurrency)
+                }
+              >
+                {SUPPORTED_FIAT_CURRENCIES.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label>
@@ -193,9 +208,11 @@ export default function Home() {
             </label>
 
             <div className="quote-box">
-              <span>KAS/KRW</span>
+              <span>{quote?.pair ?? `KAS/${fiatCurrency}`}</span>
               <strong>
-                {quote ? formatKrw.format(quote.rateKrwPerKas) : "loading"}
+                {quote
+                  ? formatFiat(quote.rateFiatPerKas, quote.fiatCurrency)
+                  : "loading"}
               </strong>
               <small>
                 예상 결제액 {estimatedKas.toFixed(8)} KAS ·{" "}
@@ -218,7 +235,12 @@ export default function Home() {
                 <div className="payment-header">
                   <div>
                     <p className="eyebrow">주문 {activePayment.id}</p>
-                    <h2>{formatKrw.format(activePayment.krwAmount)}</h2>
+                    <h2>
+                      {formatFiat(
+                        activePayment.fiatAmount,
+                        activePayment.fiatCurrency,
+                      )}
+                    </h2>
                   </div>
                   <span className={`status status-${activePayment.status}`}>
                     {activePayment.status}
@@ -285,7 +307,9 @@ export default function Home() {
                       <span>{sale.merchantName}</span>
                     </button>
                     <div>
-                      <strong>{formatKrw.format(sale.krwAmount)}</strong>
+                      <strong>
+                        {formatFiat(sale.fiatAmount, sale.fiatCurrency)}
+                      </strong>
                       <span>{sale.kasAmount.toFixed(4)} KAS</span>
                     </div>
                     <span className={`status status-${sale.status}`}>
@@ -302,6 +326,14 @@ export default function Home() {
       </section>
     </main>
   );
+}
+
+function formatFiat(amount: number, currency: FiatCurrency) {
+  return new Intl.NumberFormat(currency === "KRW" ? "ko-KR" : "en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: currency === "KRW" || currency === "JPY" ? 0 : 2,
+  }).format(amount);
 }
 
 function createQr(payload: string) {

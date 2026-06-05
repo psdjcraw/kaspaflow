@@ -10,7 +10,9 @@ import {
 import path from "node:path";
 import {
   createPaymentRequest,
+  isFiatCurrency,
   isKaspaAddress,
+  type FiatCurrency,
   type KaspaPaymentRequest,
   type PaymentStatus,
 } from "./kaspa";
@@ -30,26 +32,30 @@ const store =
 export type CreatePaymentInput = {
   merchantName: string;
   merchantAddress: string;
-  krwAmount: number;
-  rateKrwPerKas: number;
+  fiatAmount: number;
+  fiatCurrency: FiatCurrency;
+  rateFiatPerKas: number;
 };
 
 export function listPayments() {
-  return [...store.payments].sort((a, b) =>
+  return store.payments.map(hydratePayment).sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
 }
 
 export function getPayment(id: string) {
-  return store.payments.find((payment) => payment.id === id) ?? null;
+  const payment = store.payments.find((entry) => entry.id === id);
+
+  return payment ? hydratePayment(payment) : null;
 }
 
 export function createPayment(input: CreatePaymentInput) {
   validatePaymentInput(input);
 
   const payment = createPaymentRequest(
-    input.krwAmount,
-    input.rateKrwPerKas,
+    input.fiatAmount,
+    input.fiatCurrency,
+    input.rateFiatPerKas,
     input.merchantAddress.trim(),
     input.merchantName.trim(),
   );
@@ -64,19 +70,20 @@ export function updatePaymentStatus(
   status: PaymentStatus,
   values: Pick<KaspaPaymentRequest, "txHash" | "receivedKasAmount"> = {},
 ) {
-  const payment = getPayment(id);
+  const payment = store.payments.find((entry) => entry.id === id);
 
   if (!payment) {
     return null;
   }
 
+  Object.assign(payment, hydratePayment(payment));
   payment.status = status;
   payment.txHash = values.txHash ?? payment.txHash;
   payment.receivedKasAmount =
     values.receivedKasAmount ?? payment.receivedKasAmount;
 
   persistStore();
-  return payment;
+  return hydratePayment(payment);
 }
 
 function getStorePath() {
@@ -116,11 +123,28 @@ function validatePaymentInput(input: CreatePaymentInput) {
     throw new Error("A valid Kaspa address is required.");
   }
 
-  if (!Number.isFinite(input.krwAmount) || input.krwAmount < 100) {
-    throw new Error("KRW amount must be at least 100.");
+  if (!Number.isFinite(input.fiatAmount) || input.fiatAmount <= 0) {
+    throw new Error("Payment amount must be greater than zero.");
   }
 
-  if (!Number.isFinite(input.rateKrwPerKas) || input.rateKrwPerKas <= 0) {
-    throw new Error("KAS/KRW rate must be greater than zero.");
+  if (!isFiatCurrency(input.fiatCurrency)) {
+    throw new Error("Unsupported fiat currency.");
   }
+
+  if (!Number.isFinite(input.rateFiatPerKas) || input.rateFiatPerKas <= 0) {
+    throw new Error("Fiat/KAS rate must be greater than zero.");
+  }
+}
+
+function hydratePayment(payment: KaspaPaymentRequest): KaspaPaymentRequest {
+  if (payment.fiatAmount && payment.fiatCurrency && payment.rateFiatPerKas) {
+    return payment;
+  }
+
+  return {
+    ...payment,
+    fiatAmount: payment.krwAmount ?? 0,
+    fiatCurrency: "KRW",
+    rateFiatPerKas: payment.rateKrwPerKas ?? 350,
+  };
 }

@@ -1,6 +1,10 @@
 export const DEFAULT_MERCHANT_ADDRESS =
   "kaspa:q000000000000000000000000000000000000000000000000000000000000";
 
+export const SUPPORTED_FIAT_CURRENCIES = ["KRW", "USD", "EUR", "JPY"] as const;
+
+export type FiatCurrency = (typeof SUPPORTED_FIAT_CURRENCIES)[number];
+
 export type PaymentStatus =
   | "waiting"
   | "seen"
@@ -13,14 +17,17 @@ export type KaspaPaymentRequest = {
   id: string;
   merchantAddress: string;
   merchantName: string;
-  krwAmount: number;
+  fiatAmount: number;
+  fiatCurrency: FiatCurrency;
+  rateFiatPerKas: number;
   kasAmount: number;
-  rateKrwPerKas: number;
   expiresAt: string;
   createdAt: string;
   status: PaymentStatus;
   txHash?: string;
   receivedKasAmount?: number;
+  krwAmount?: number;
+  rateKrwPerKas?: number;
 };
 
 export function buildKaspaUri(request: KaspaPaymentRequest) {
@@ -33,17 +40,26 @@ export function isKaspaAddress(value: string) {
   return /^kaspa:[a-z0-9]{61,63}$/i.test(value.trim());
 }
 
-export function krwToKas(krwAmount: number, rateKrwPerKas: number) {
-  if (rateKrwPerKas <= 0) {
-    throw new Error("KAS/KRW rate must be greater than zero.");
+export function isFiatCurrency(value: string): value is FiatCurrency {
+  return SUPPORTED_FIAT_CURRENCIES.includes(value as FiatCurrency);
+}
+
+export function fiatToKas(fiatAmount: number, rateFiatPerKas: number) {
+  if (rateFiatPerKas <= 0) {
+    throw new Error("Fiat/KAS rate must be greater than zero.");
   }
 
-  return Math.ceil((krwAmount / rateKrwPerKas) * 100_000_000) / 100_000_000;
+  return Math.ceil((fiatAmount / rateFiatPerKas) * 100_000_000) / 100_000_000;
+}
+
+export function krwToKas(krwAmount: number, rateKrwPerKas: number) {
+  return fiatToKas(krwAmount, rateKrwPerKas);
 }
 
 export function createPaymentRequest(
-  krwAmount: number,
-  rateKrwPerKas: number,
+  fiatAmount: number,
+  fiatCurrency: FiatCurrency,
+  rateFiatPerKas: number,
   merchantAddress = DEFAULT_MERCHANT_ADDRESS,
   merchantName = "KaspaFlow Pilot",
 ): KaspaPaymentRequest {
@@ -55,9 +71,12 @@ export function createPaymentRequest(
     id,
     merchantAddress,
     merchantName,
-    krwAmount,
-    kasAmount: krwToKas(krwAmount, rateKrwPerKas),
-    rateKrwPerKas,
+    fiatAmount,
+    fiatCurrency,
+    rateFiatPerKas,
+    kasAmount: fiatToKas(fiatAmount, rateFiatPerKas),
+    krwAmount: fiatCurrency === "KRW" ? fiatAmount : undefined,
+    rateKrwPerKas: fiatCurrency === "KRW" ? rateFiatPerKas : undefined,
     createdAt,
     expiresAt,
     status: "waiting",

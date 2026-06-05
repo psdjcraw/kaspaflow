@@ -4,6 +4,7 @@ import {
   DEFAULT_MERCHANT_ADDRESS,
   buildKaspaUri,
   createPaymentRequest,
+  fiatToKas,
   isKaspaAddress,
   krwToKas,
 } from "./kaspa";
@@ -21,17 +22,18 @@ describe("kaspa domain helpers", () => {
 
   it("converts KRW to KAS with 8 decimal precision", () => {
     expect(krwToKas(21000, 350)).toBe(60);
+    expect(fiatToKas(25, 0.25)).toBe(100);
     expect(krwToKas(1000, 333)).toBe(3.00300301);
   });
 
   it("rejects invalid quote rates", () => {
     expect(() => krwToKas(21000, 0)).toThrow(
-      "KAS/KRW rate must be greater than zero.",
+      "Fiat/KAS rate must be greater than zero.",
     );
   });
 
   it("builds a Kaspa URI for wallet QR handoff", () => {
-    const payment = createPaymentRequest(21000, 350);
+    const payment = createPaymentRequest(21000, "KRW", 350);
     const uri = buildKaspaUri(payment);
 
     expect(uri).toContain(DEFAULT_MERCHANT_ADDRESS);

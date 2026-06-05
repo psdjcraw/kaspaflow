@@ -7,7 +7,7 @@ export async function GET() {
     ok: true,
     service: "kaspaflow",
     watcherMode: process.env.KASPA_WATCHER_MODE ?? "mock",
-    quote: getKaspaQuote(),
+    quote: await getKaspaQuote(),
     checkedAt: new Date().toISOString(),
   });
 }

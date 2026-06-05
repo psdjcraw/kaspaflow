@@ -16,7 +16,7 @@ The app is intentionally designed so merchants receive KAS directly into their o
 ## Current MVP
 
 - Merchant name and Kaspa receiving address form
-- Server-side KAS/KRW quote endpoint
+- Server-side KAS/fiat quote endpoint for KRW, USD, EUR, and JPY
 - Payment request API with expiry and calculated KAS amount
 - QR generation in the browser
 - Payment status polling through a watcher abstraction
@@ -43,14 +43,24 @@ If port 3000 is busy, Next.js will print the fallback port.
 ## Configuration
 
 ```bash
+QUOTE_FIAT=KRW
+KAS_PRICE_SOURCE=mock
 KAS_KRW_RATE=350
+KAS_USD_RATE=0.25
+KAS_EUR_RATE=0.23
+KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
 KASPA_WATCHER_MODE=mock
 KASPA_REST_API_URL=https://api.kaspa.org
 ```
 
-When `KAS_KRW_RATE` is not set, the quote endpoint uses a mock rate of 350 KRW
-per KAS.
+`KAS_PRICE_SOURCE` accepts:
+
+- `mock`: use configured env rates or built-in development defaults.
+- `coingecko`: fetch KAS prices from CoinGecko and fall back to mock if the
+  request fails.
+
+When no fiat rate env var is set, the quote endpoint uses mock defaults.
 
 `KASPAFLOW_DATA_DIR` controls where `payments.json` is written. The default is
 `./data`, which is ignored by git.
@@ -63,7 +73,7 @@ per KAS.
 
 ## API
 
-- `GET /api/quote` returns the current KAS/KRW quote.
+- `GET /api/quote?fiat=USD` returns the current KAS/fiat quote.
 - `GET /api/health` returns service, watcher, and quote health metadata.
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
@@ -78,7 +88,8 @@ curl -X POST http://localhost:3000/api/payments \
   -d '{
     "merchantName": "Pilot Cafe",
     "merchantAddress": "kaspa:q000000000000000000000000000000000000000000000000000000000000",
-    "krwAmount": 21000
+    "fiatAmount": 21000,
+    "fiatCurrency": "KRW"
   }'
 ```
 
@@ -87,7 +98,7 @@ curl -X POST http://localhost:3000/api/payments \
 Before using this with a real merchant:
 
 - Replace the placeholder Kaspa address.
-- Replace the mock price provider with a real quote source.
+- Use `KAS_PRICE_SOURCE=coingecko` or another real quote source.
 - Test `kaspa-rest` watcher mode with small real payments.
 - Move from file-backed storage to Postgres before multi-store beta.
 - Review legal, tax, refund, custody, and payment-processing implications.
@@ -95,3 +106,4 @@ Before using this with a real merchant:
 ## References
 
 - Kaspa REST API: <https://api.kaspa.org/docs>
+- CoinGecko simple price API: <https://docs.coingecko.com/reference/simple-price>

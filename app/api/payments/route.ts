@@ -11,12 +11,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const quote = getKaspaQuote();
+    const quote = await getKaspaQuote(String(body.fiatCurrency ?? "KRW"));
     const payment = createPayment({
       merchantName: String(body.merchantName ?? ""),
       merchantAddress: String(body.merchantAddress ?? ""),
-      krwAmount: Number(body.krwAmount),
-      rateKrwPerKas: quote.rateKrwPerKas,
+      fiatAmount: Number(body.fiatAmount ?? body.krwAmount),
+      fiatCurrency: quote.fiatCurrency,
+      rateFiatPerKas: quote.rateFiatPerKas,
     });
 
     return NextResponse.json(
