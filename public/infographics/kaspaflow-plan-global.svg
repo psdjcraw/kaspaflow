@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title desc">
+  <title id="title">KaspaFlow global Kaspa direct payment plan infographic</title>
+  <desc id="desc">Infographic summarizing the Kaspa QR direct payment flow, MVP features, principles, and risks for small merchants</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f8f3; }
+      .panel { fill: #ffffff; stroke: #dfe4dc; stroke-width: 2; }
+      .ink { fill: #18201c; }
+      .muted { fill: #647067; }
+      .teal { fill: #54d6b6; }
+      .teal-dark { fill: #167761; }
+      .line { stroke: #167761; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .thin-line { stroke: #54d6b6; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .dash { stroke: #cfd8d1; stroke-width: 2; stroke-dasharray: 8 12; }
+      .title { font: 800 72px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .subtitle { font: 500 30px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .eyebrow { font: 800 24px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .step-num { font: 800 28px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .step-title { font: 800 25px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .step-body { font: 500 18px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .block-title { font: 800 32px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .bullet { font: 600 24px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .footer { font: 800 30px "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; letter-spacing: 0; }
+      .shadow { filter: drop-shadow(0 18px 38px rgba(24, 32, 28, 0.11)); }
+    </style>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#e8ede6" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect class="bg" width="1920" height="1080"/>
+  <rect width="1920" height="1080" fill="url(#grid)" opacity="0.7"/>
+  <circle cx="1700" cy="155" r="155" fill="#54d6b6" opacity="0.12"/>
+  <circle cx="210" cy="930" r="180" fill="#167761" opacity="0.08"/>
+
+  <g transform="translate(120 88)">
+    <text class="eyebrow teal-dark" x="0" y="0">KASPA ONLY · NON-CUSTODIAL PAYMENT HELPER</text>
+    <text class="title ink" x="0" y="86">KaspaFlow: Global Kaspa Direct Pay</text>
+    <text class="subtitle muted" x="0" y="136">Non-custodial QR payments straight to the merchant wallet</text>
+  </g>
+
+  <g transform="translate(120 275)">
+    <line class="dash" x1="130" y1="130" x2="1530" y2="130"/>
+
+    <g class="shadow" transform="translate(0 0)">
+      <rect class="panel" x="0" y="0" width="280" height="260" rx="18"/>
+      <circle class="teal" cx="48" cy="48" r="30"/>
+      <text class="step-num ink" x="39" y="58">1</text>
+      <rect x="92" y="58" width="86" height="120" rx="10" fill="#eef7f3" stroke="#167761" stroke-width="5"/>
+      <rect x="112" y="82" width="46" height="8" rx="4" fill="#167761"/>
+      <rect x="112" y="112" width="46" height="8" rx="4" fill="#54d6b6"/>
+      <rect x="112" y="142" width="46" height="8" rx="4" fill="#54d6b6"/>
+      <path class="thin-line" d="M190 148 h46"/>
+      <text class="step-title ink" x="32" y="213">Enter amount</text>
+      <text class="step-body muted" x="32" y="243">Merchant enters total</text>
+    </g>
+
+    <g transform="translate(286 108)">
+      <path class="line" d="M0 20 H58"/>
+      <path class="line" d="M38 0 L58 20 L38 40"/>
+    </g>
+
+    <g class="shadow" transform="translate(350 0)">
+      <rect class="panel" x="0" y="0" width="280" height="260" rx="18"/>
+      <circle class="teal" cx="48" cy="48" r="30"/>
+      <text class="step-num ink" x="39" y="58">2</text>
+      <rect x="92" y="70" width="96" height="118" rx="12" fill="#eef7f3" stroke="#167761" stroke-width="5"/>
+      <circle cx="214" cy="126" r="40" fill="#54d6b6"/>
+      <text class="step-title ink" x="202" y="137" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="32" font-weight="900">K</text>
+      <rect x="112" y="94" width="56" height="12" rx="4" fill="#167761"/>
+      <circle cx="118" cy="132" r="7" fill="#54d6b6"/>
+      <circle cx="146" cy="132" r="7" fill="#54d6b6"/>
+      <circle cx="118" cy="160" r="7" fill="#54d6b6"/>
+      <circle cx="146" cy="160" r="7" fill="#54d6b6"/>
+      <text class="step-title ink" x="32" y="213">Calculate KAS</text>
+      <text class="step-body muted" x="32" y="243">Short quote window</text>
+    </g>
+
+    <g transform="translate(636 108)">
+      <path class="line" d="M0 20 H58"/>
+      <path class="line" d="M38 0 L58 20 L38 40"/>
+    </g>
+
+    <g class="shadow" transform="translate(700 0)">
+      <rect class="panel" x="0" y="0" width="280" height="260" rx="18"/>
+      <circle class="teal" cx="48" cy="48" r="30"/>
+      <text class="step-num ink" x="39" y="58">3</text>
+      <rect x="102" y="66" width="116" height="116" rx="12" fill="#ffffff" stroke="#167761" stroke-width="6"/>
+      <rect x="122" y="86" width="26" height="26" fill="#18201c"/>
+      <rect x="172" y="86" width="26" height="26" fill="#18201c"/>
+      <rect x="122" y="136" width="26" height="26" fill="#18201c"/>
+      <rect x="160" y="124" width="14" height="14" fill="#54d6b6"/>
+      <rect x="184" y="148" width="14" height="14" fill="#54d6b6"/>
+      <text class="step-title ink" x="32" y="213">Show QR</text>
+      <text class="step-body muted" x="32" y="243">Encode address + amount</text>
+    </g>
+
+    <g transform="translate(986 108)">
+      <path class="line" d="M0 20 H58"/>
+      <path class="line" d="M38 0 L58 20 L38 40"/>
+    </g>
+
+    <g class="shadow" transform="translate(1050 0)">
+      <rect class="panel" x="0" y="0" width="280" height="260" rx="18"/>
+      <circle class="teal" cx="48" cy="48" r="30"/>
+      <text class="step-num ink" x="39" y="58">4</text>
+      <rect x="80" y="62" width="80" height="138" rx="14" fill="#eef7f3" stroke="#167761" stroke-width="5"/>
+      <path class="thin-line" d="M102 106 h36 M102 132 h36 M102 158 h22"/>
+      <circle cx="208" cy="132" r="38" fill="#54d6b6"/>
+      <path d="M194 132 h34 M216 120 l12 12 -12 12" stroke="#18201c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <text class="step-title ink" x="32" y="213">Customer pays</text>
+      <text class="step-body muted" x="32" y="243">Kaspa, no cards or banks</text>
+    </g>
+
+    <g transform="translate(1336 108)">
+      <path class="line" d="M0 20 H58"/>
+      <path class="line" d="M38 0 L58 20 L38 40"/>
+    </g>
+
+    <g class="shadow" transform="translate(1400 0)">
+      <rect class="panel" x="0" y="0" width="280" height="260" rx="18"/>
+      <circle class="teal" cx="48" cy="48" r="30"/>
+      <text class="step-num ink" x="39" y="58">5</text>
+      <rect x="80" y="70" width="86" height="122" rx="12" fill="#eef7f3" stroke="#167761" stroke-width="5"/>
+      <path d="M104 128 l18 18 44 -52" stroke="#167761" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <rect x="188" y="92" width="50" height="84" rx="8" fill="#54d6b6"/>
+      <path d="M198 112 h30 M198 136 h30 M198 160 h18" stroke="#18201c" stroke-width="5" stroke-linecap="round"/>
+      <text class="step-title ink" x="32" y="213">Confirm payment</text>
+      <text class="step-body muted" x="32" y="243">Log TX hash and sale</text>
+    </g>
+  </g>
+
+  <g transform="translate(120 655)">
+    <g class="shadow">
+      <rect class="panel" x="0" y="0" width="520" height="270" rx="18"/>
+      <text class="block-title ink" x="36" y="60">MVP features</text>
+      <circle class="teal" cx="45" cy="102" r="7"/><text class="bullet muted" x="68" y="111">Merchant setup · payment requests</text>
+      <circle class="teal" cx="45" cy="150" r="7"/><text class="bullet muted" x="68" y="159">QR generation · payment detection</text>
+      <circle class="teal" cx="45" cy="198" r="7"/><text class="bullet muted" x="68" y="207">Daily sales CSV</text>
+    </g>
+
+    <g class="shadow" transform="translate(580 0)">
+      <rect class="panel" x="0" y="0" width="520" height="270" rx="18"/>
+      <text class="block-title ink" x="36" y="60">Core principles</text>
+      <circle class="teal" cx="45" cy="102" r="7"/><text class="bullet muted" x="68" y="111">Kaspa only</text>
+      <circle class="teal" cx="45" cy="150" r="7"/><text class="bullet muted" x="68" y="159">Direct merchant wallet settlement</text>
+      <circle class="teal" cx="45" cy="198" r="7"/><text class="bullet muted" x="68" y="207">No custody · no conversion</text>
+    </g>
+
+    <g class="shadow" transform="translate(1160 0)">
+      <rect class="panel" x="0" y="0" width="640" height="270" rx="18"/>
+      <text class="block-title ink" x="36" y="60">Key risks</text>
+      <circle class="teal" cx="45" cy="102" r="7"/><text class="bullet muted" x="68" y="111">Volatility · over/underpayment</text>
+      <circle class="teal" cx="45" cy="150" r="7"/><text class="bullet muted" x="68" y="159">Refund UX · tax handling</text>
+      <circle class="teal" cx="45" cy="198" r="7"/><text class="bullet muted" x="68" y="207">Legal review for processing/custody</text>
+    </g>
+  </g>
+
+  <g transform="translate(120 970)">
+    <rect x="0" y="-52" width="1680" height="88" rx="18" fill="#18201c"/>
+    <circle cx="48" cy="-8" r="22" fill="#54d6b6"/>
+    <path d="M38 -8 h20 M50 -18 l10 10 -10 10" stroke="#18201c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text class="footer" fill="#ffffff" x="88" y="3">Phase 1: pilot local shops → 10 merchant beta</text>
+  </g>
+</svg>
