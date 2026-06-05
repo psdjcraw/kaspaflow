@@ -36,6 +36,8 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - Server-sent realtime payment, dashboard, and audit updates
 - Error monitoring endpoint backed by the audit log
 - Testnet dry-run checklist and validation API
+- Non-custodial testnet send handoff URI generation
+- Store-scoped wallet address book without private keys
 - File-backed local sales log
 - CSV export at `/api/sales.csv`
 - Korean and global plan infographic assets under `public/infographics`
@@ -118,6 +120,14 @@ JSON webhook events for payment creation, bulk sync, and refund activity.
 docker compose up --build
 ```
 
+Or use the package scripts:
+
+```bash
+npm run docker:config
+npm run docker:up
+npm run docker:down
+```
+
 The compose file mounts `/app/data` as a persistent volume. Set
 `KASPAFLOW_ADMIN_TOKEN`, `KASPA_NETWORK`, and webhook values before exposing the
 container outside a local pilot network.
@@ -131,6 +141,9 @@ container outside a local pilot network.
 - `GET /api/testnet` returns the testnet dry-run checklist.
 - `GET /api/testnet?mode=balance&address=...` checks a testnet address balance.
 - `GET /api/testnet?mode=tx&txId=...` fetches a transaction detail.
+- `POST /api/testnet/send` creates a non-custodial wallet handoff URI.
+- `GET /api/wallets` lists saved wallet addresses.
+- `POST /api/wallets` creates, updates, or disables wallet address entries.
 - `GET /api/payments` lists payment requests in the file-backed store.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.

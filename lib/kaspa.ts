@@ -51,9 +51,26 @@ export type KaspaPaymentRequest = {
 };
 
 export function buildKaspaUri(request: KaspaPaymentRequest) {
-  const amount = request.kasAmount.toFixed(8);
-  const label = encodeURIComponent(`KaspaFlow ${request.id}`);
-  return `${request.merchantAddress}?amount=${amount}&label=${label}`;
+  return buildKaspaTransferUri(
+    request.merchantAddress,
+    request.kasAmount,
+    `KaspaFlow ${request.id}`,
+  );
+}
+
+export function buildKaspaTransferUri(
+  address: string,
+  kasAmount: number,
+  label?: string,
+) {
+  const amount = kasAmount.toFixed(8);
+  const params = [`amount=${amount}`];
+
+  if (label) {
+    params.push(`label=${encodeURIComponent(label)}`);
+  }
+
+  return `${address}?${params.join("&")}`;
 }
 
 export function isKaspaAddress(value: string) {
