@@ -82,6 +82,8 @@ KASPA_REST_API_URL=https://api.kaspa.org
 KASPAFLOW_ENABLE_SIMULATION=false
 KASPAFLOW_ADMIN_TOKEN=
 KASPAFLOW_NOTIFY_WEBHOOK_URL=
+KASPAFLOW_NOTIFY_WEBHOOK_FORMAT=json
+KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID=
 ```
 
 `KAS_PRICE_SOURCE` accepts:
@@ -146,7 +148,9 @@ off for real merchant pilots. Production runtime always blocks the simulation
 endpoint even if the variable is accidentally set to `true`.
 
 `KASPAFLOW_NOTIFY_WEBHOOK_URL` is optional. When configured, KaspaFlow sends
-JSON webhook events for payment creation, bulk sync, and refund activity.
+webhook events for payment creation, bulk sync, daily reports, and refund
+activity. `KASPAFLOW_NOTIFY_WEBHOOK_FORMAT` accepts `json`, `discord`, or
+`telegram`. Telegram delivery also requires `KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID`.
 
 ## Docker
 
