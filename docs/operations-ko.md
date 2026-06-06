@@ -136,12 +136,13 @@ curl -X POST http://localhost:3000/api/reports/daily \
 - 결제 만료 관련 파일
 
 업데이트, 서버 이전, 컨테이너 재생성 전에는 이 디렉터리를 백업한다. Docker
-Compose 운영 시 기본 볼륨은 `kaspaflow-data`다.
+Compose 운영 시 기본 볼륨은 `kaspaflow-data`다. 기본 백업 위치는
+`./backups`이며 `KASPAFLOW_BACKUP_DIR`로 바꿀 수 있다.
 
-예시:
+권장 명령:
 
 ```bash
-tar -czf kaspaflow-data-$(date +%Y-%m-%d).tgz /app/data
+npm run backup:data
 ```
 
 ## 8. 장애 대응

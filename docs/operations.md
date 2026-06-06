@@ -84,7 +84,14 @@ KaspaFlow stores local operational data in `KASPAFLOW_DATA_DIR`:
 - `audit-events.json`
 - merchant and wallet store files
 
-Back up this directory before updating or moving a pilot deployment.
+Back up this directory before updating or moving a pilot deployment:
+
+```bash
+npm run backup:data
+```
+
+The default backup directory is `./backups`; set `KASPAFLOW_BACKUP_DIR` to
+choose another destination.
 
 ## Operational Limits
 
