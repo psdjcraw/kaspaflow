@@ -41,6 +41,7 @@ describe("kaspa domain helpers", () => {
     const payment = createPaymentRequest(21000, "KRW", 350);
     const uri = buildKaspaUri(payment);
 
+    expect(payment.id).toMatch(/^KF-[A-Z0-9]+-[A-Z0-9]{8}$/);
     expect(uri).toContain(DEFAULT_MERCHANT_ADDRESS);
     expect(uri).toContain("amount=60.00000000");
     expect(uri).toContain(`label=KaspaFlow%20${payment.id}`);

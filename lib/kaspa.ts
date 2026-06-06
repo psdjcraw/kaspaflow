@@ -101,7 +101,7 @@ export function createPaymentRequest(
   merchantAddress = DEFAULT_MERCHANT_ADDRESS,
   merchantName = "KaspaFlow Pilot",
 ): KaspaPaymentRequest {
-  const id = `KF-${Date.now().toString(36).toUpperCase()}`;
+  const id = createPaymentId();
   const createdAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
@@ -119,4 +119,21 @@ export function createPaymentRequest(
     expiresAt,
     status: "waiting",
   };
+}
+
+function createPaymentId() {
+  const timePart = Date.now().toString(36).toUpperCase();
+  const randomPart = getRandomIdPart();
+
+  return `KF-${timePart}-${randomPart}`;
+}
+
+function getRandomIdPart() {
+  const randomUuid = globalThis.crypto?.randomUUID?.();
+
+  if (randomUuid) {
+    return randomUuid.replaceAll("-", "").slice(0, 8).toUpperCase();
+  }
+
+  return Math.random().toString(36).slice(2, 10).toUpperCase().padEnd(8, "0");
 }
