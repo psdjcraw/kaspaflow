@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "backup:data": "node scripts/backup-data.mjs",
     "restore:data": "node scripts/restore-data.mjs",
+    "reconcile:sales": "node scripts/reconcile-sales.mjs",
     "db:schema": "node scripts/apply-postgres-schema.mjs",
     "db:export": "node scripts/export-postgres-sql.mjs",
     "smoke:postgres": "node scripts/smoke-postgres-api.mjs",

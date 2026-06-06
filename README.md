@@ -106,6 +106,8 @@ directory. Set `KASPAFLOW_BACKUP_DIR` to choose the destination; the default is
 command refuses to overwrite a non-empty data directory unless `--force` is
 provided; with `--force`, it first moves the current directory aside as a
 `.pre-restore-*` copy.
+Run `npm run reconcile:sales -- YYYY-MM-DD` to generate a local JSON
+reconciliation summary from file-backed payments.
 
 `KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
 `KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and

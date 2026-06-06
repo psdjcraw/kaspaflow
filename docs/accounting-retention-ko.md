@@ -27,8 +27,9 @@
 4. `일일 리포트`를 전송한다.
 5. `/api/sales.csv`를 내려받아 날짜별 폴더에 저장한다.
 6. 매장 지갑의 당일 KAS 입금 내역을 내려받거나 캡처한다.
-7. `npm run backup:data`로 운영 데이터를 백업한다.
-8. `openPayments`, `attentionPayments`, `refunds`가 남아 있으면 인계 메모를 남긴다.
+7. `npm run reconcile:sales -- YYYY-MM-DD`로 KaspaFlow 매출 대조 요약을 만든다.
+8. `npm run backup:data`로 운영 데이터를 백업한다.
+9. `openPayments`, `attentionPayments`, `refunds`가 남아 있으면 인계 메모를 남긴다.
 
 ## 파일명 기준
 
@@ -50,6 +51,14 @@
 - `underpaid`는 매장 정책에 따라 추가 송금 또는 환불 처리가 끝나기 전까지 보류한다.
 - `overpaid`는 주문 금액은 매출로 보고, 초과분은 환불 또는 별도 처리 여부를 기록한다.
 - 환불은 원 결제 ID와 환불 tx hash가 함께 있어야 한다.
+
+파일 저장소 파일럿에서는 다음 명령으로 당일 대조 JSON을 만들 수 있다.
+
+```bash
+npm run reconcile:sales -- 2026-06-06
+```
+
+`ok=false`면 `attention.ids` 또는 `refunds.ids`를 확인하고 인계 메모를 남긴다.
 
 ## 최소 보관 기간
 

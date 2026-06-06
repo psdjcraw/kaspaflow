@@ -122,6 +122,7 @@ curl http://localhost:3000/api/analytics \
   -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
 curl -o kaspaflow-sales.csv http://localhost:3000/api/sales.csv \
   -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
+npm run reconcile:sales -- $(date +%Y-%m-%d)
 curl -X POST http://localhost:3000/api/reports/daily \
   -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
 ```
