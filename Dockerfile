@@ -20,6 +20,6 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data /app/backups
 EXPOSE 3000
 CMD ["npm", "run", "start"]

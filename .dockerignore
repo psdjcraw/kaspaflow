@@ -1,7 +1,15 @@
 .next
+backups
+coverage
 data
+dist
 node_modules
 npm-debug.log
+.gitignore
 .git
+.env
 .env.local
+.env.*.local
+*.log
 .DS_Store
+tsconfig.tsbuildinfo
