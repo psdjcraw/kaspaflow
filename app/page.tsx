@@ -693,14 +693,31 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <section className="workspace">
-        <aside className="sidebar">
+      <header className="console-topbar">
+        <div>
+          <p className="eyebrow">KaspaFlow POS</p>
+          <strong>Kaspa-only direct checkout</strong>
+        </div>
+        <div className="topbar-status">
+          <span className="status status-confirmed">
+            {health?.kaspaNetwork ?? "mainnet"}
+          </span>
+          <span className={`status status-${health?.storageProvider === "postgres" ? "confirmed" : "waiting"}`}>
+            {health?.storageProvider ?? "storage"}
+          </span>
+          <span className={`status status-${health?.watcherMode === "kaspa-rest" ? "confirmed" : "underpaid"}`}>
+            {health?.watcherMode ?? "watcher"}
+          </span>
+        </div>
+      </header>
+
+      <section className="pos-grid">
+        <aside className="checkout-panel">
           <div>
             <p className="eyebrow">Kaspa only</p>
             <h1>KaspaFlow</h1>
             <p className="lede">
-              비수탁 Kaspa QR 결제 요청을 만들고 입금 상태와 매출 기록을
-              확인합니다.
+              매장 지갑으로 직접 받는 비수탁 Kaspa 결제 콘솔입니다.
             </p>
           </div>
 
@@ -730,6 +747,18 @@ export default function Home() {
                 onChange={(event) => setFiatAmount(event.target.value)}
               />
             </label>
+
+            <div className="quick-amounts">
+              {[5000, 12000, 21000, 50000].map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => setFiatAmount(formatAmountInput(amount, fiatCurrency))}
+                >
+                  {formatFiat(amount, fiatCurrency)}
+                </button>
+              ))}
+            </div>
 
             <label>
               기준 통화
@@ -880,8 +909,8 @@ export default function Home() {
           </section>
         </aside>
 
-        <section className="counter">
-          <div className="payment-panel">
+        <section className="commerce-stage">
+          <div className="payment-panel qr-workbench">
             {activePayment ? (
               <>
                 <div className="payment-header">
