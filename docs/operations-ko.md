@@ -101,14 +101,17 @@ curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
 
 ```bash
 curl http://localhost:3000/api/health
-curl http://localhost:3000/api/errors
+curl http://localhost:3000/api/errors \
+  -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
 ```
 
 영업 종료 후:
 
 ```bash
-curl http://localhost:3000/api/analytics
-curl -o kaspaflow-sales.csv http://localhost:3000/api/sales.csv
+curl http://localhost:3000/api/analytics \
+  -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
+curl -o kaspaflow-sales.csv http://localhost:3000/api/sales.csv \
+  -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
 curl -X POST http://localhost:3000/api/reports/daily \
   -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
 ```

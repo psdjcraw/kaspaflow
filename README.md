@@ -190,7 +190,7 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
 - `GET /api/testnet?mode=balance&address=...` checks a testnet address balance.
 - `GET /api/testnet?mode=tx&txId=...` fetches a transaction detail.
 - `POST /api/testnet/send` creates a non-custodial wallet handoff URI.
-- `GET /api/wallets` lists saved wallet addresses.
+- `GET /api/wallets` lists saved wallet addresses for authenticated merchants.
 - `POST /api/wallets` creates, updates, or disables wallet address entries.
 - `GET /api/payments` lists payment requests for authenticated merchants.
 - `POST /api/payments` creates a payment request.
@@ -209,7 +209,7 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
 - `GET /api/errors` returns recent failed/rejected operational events.
 - `GET /api/reports/daily` returns the current daily sales report.
 - `POST /api/reports/daily` sends the daily sales report to the configured webhook.
-- `GET /api/sales.csv` downloads the current sales log.
+- `GET /api/sales.csv` downloads the current sales log for authenticated merchants.
 - `GET /payments/:id` opens the merchant-facing payment detail page.
 
 Example payment creation:

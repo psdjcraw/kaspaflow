@@ -1,6 +1,13 @@
+import { requireAdminAuth } from "@/lib/auth";
 import { listPayments } from "@/lib/payment-store";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   const rows = await listPayments();
   const header = [
     "id",

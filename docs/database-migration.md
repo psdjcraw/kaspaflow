@@ -77,7 +77,7 @@ Minimum checks:
 - `GET /api/admin` creates or reads the default merchant settings.
 - `POST /api/payments` creates a payment row.
 - `POST /api/payments/:id/simulate` returns the updated status immediately.
-- `GET /api/analytics` and `GET /api/audit` reflect the payment.
+- Authenticated `GET /api/analytics` and `GET /api/audit` reflect the payment.
 
 `npm run smoke:postgres` performs those checks automatically against the
 configured `KASPAFLOW_BASE_URL`.
@@ -159,7 +159,8 @@ If the DB-backed app shows inconsistent totals or payment states:
 
 1. Stop the DB-backed app.
 2. Restore the original file-backed deployment and `KASPAFLOW_DATA_DIR`.
-3. Run `/api/health`, `/api/analytics`, and `/api/payments/sync?silent=1`.
+3. Run `/api/health`, authenticated `/api/analytics`, and authenticated
+   `/api/payments/sync?silent=1`.
 4. Keep the failed DB snapshot for analysis.
 
 Do not attempt partial manual edits to live payment rows while the merchant is

@@ -8,7 +8,13 @@ import {
   upsertWalletAddress,
 } from "@/lib/wallet-store";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   return NextResponse.json({ addresses: await listWalletAddresses() });
 }
 

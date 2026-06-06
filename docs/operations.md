@@ -73,7 +73,7 @@ Expected:
 3. Send KAS from an external wallet to the displayed address.
 4. Watch the payment progress from `waiting` to `seen` or `confirmed`.
 5. Confirm `/api/health` shows background sync running without errors.
-6. Export `/api/sales.csv` and confirm the payment appears once.
+6. Export `/api/sales.csv` with the admin token and confirm the payment appears once.
 7. Confirm simulated payments are excluded from real sales totals.
 
 ## Data Files
