@@ -26,7 +26,11 @@ a PostgreSQL-compatible managed service.
 1. Stop writes by taking the merchant app offline or putting it behind a
    maintenance page.
 2. Back up `KASPAFLOW_DATA_DIR`.
-3. Create the database and apply `db/schema.sql`.
+3. Create the database and apply `db/schema.sql`:
+
+   ```bash
+   DATABASE_URL=postgres://... npm run db:schema
+   ```
 4. Export the current JSON files into SQL:
 
    ```bash
@@ -45,6 +49,31 @@ a PostgreSQL-compatible managed service.
    ```
 
 9. Create one test payment, sync it, and export `/api/sales.csv`.
+
+## Local Rehearsal
+
+```bash
+KASPAFLOW_ADMIN_TOKEN=dummy POSTGRES_PASSWORD=kaspaflow-dev \
+  docker compose --profile postgres up -d postgres
+
+DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
+  npm run db:schema
+
+KASPAFLOW_STORAGE_PROVIDER=postgres \
+DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
+KASPAFLOW_ADMIN_TOKEN=dummy \
+KASPAFLOW_ENABLE_SIMULATION=true \
+KASPA_WATCHER_MODE=mock \
+  npm run dev -- --port 3003
+```
+
+Minimum checks:
+
+- `GET /api/health` reports `storageProvider: postgres` and `storage.ready: true`.
+- `GET /api/admin` creates or reads the default merchant settings.
+- `POST /api/payments` creates a payment row.
+- `POST /api/payments/:id/simulate` returns the updated status immediately.
+- `GET /api/analytics` and `GET /api/audit` reflect the payment.
 
 ## Backup Command
 

@@ -73,6 +73,7 @@ KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
 KASPAFLOW_STORAGE_PROVIDER=file
 DATABASE_URL=
+POSTGRES_PASSWORD=
 KASPA_WATCHER_MODE=mock
 KASPAFLOW_BACKGROUND_SYNC_ENABLED=true
 KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS=15000
@@ -98,10 +99,10 @@ Mock defaults are only used when live requests fail or when
 `KASPAFLOW_DATA_DIR` controls where `payments.json` is written. The default is
 `./data`, which is ignored by git.
 
-`KASPAFLOW_STORAGE_PROVIDER` should stay `file` until the PostgreSQL adapter is
-implemented. Setting it to `postgres` intentionally stops the file-backed stores
-from serving as a silent fallback. `DATABASE_URL` is reserved for the Postgres
-adapter. Use `docs/database-migration.md` and `db/schema.sql` for the beta
+`KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
+`KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and
+requires `DATABASE_URL`. Use `npm run db:schema` to apply `db/schema.sql` before
+starting the app in Postgres mode. Use `docs/database-migration.md` for the beta
 storage cutover plan.
 
 `KASPAFLOW_ADMIN_TOKEN` is optional for local development. When it is set, API
@@ -148,12 +149,29 @@ Or use the package scripts:
 npm run docker:config
 npm run docker:up
 npm run docker:down
+npm run db:schema
 npm run db:export -- db/kaspaflow-import.sql
 ```
 
 The compose file mounts `/app/data` as a persistent volume. Set
 `KASPAFLOW_ADMIN_TOKEN`, `KASPA_NETWORK`, and webhook values before exposing the
 container outside a local pilot network.
+
+For a local Postgres rehearsal:
+
+```bash
+KASPAFLOW_ADMIN_TOKEN=dummy POSTGRES_PASSWORD=kaspaflow-dev \
+  docker compose --profile postgres up -d postgres
+
+DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
+  npm run db:schema
+
+KASPAFLOW_STORAGE_PROVIDER=postgres \
+DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
+KASPAFLOW_ADMIN_TOKEN=dummy \
+KASPAFLOW_ENABLE_SIMULATION=true \
+  npm run dev -- --port 3003
+```
 
 ## API
 
