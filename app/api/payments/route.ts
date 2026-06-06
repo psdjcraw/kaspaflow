@@ -8,7 +8,13 @@ import { createPayment, listPayments } from "@/lib/payment-store";
 import { sendNotification } from "@/lib/notifications";
 import { getKaspaQuote } from "@/lib/price";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminAuth(request);
+
+  if (authError) {
+    return authError;
+  }
+
   startBackgroundPaymentSync();
 
   return NextResponse.json({ payments: await listPayments() });

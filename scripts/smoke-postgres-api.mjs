@@ -40,13 +40,13 @@ assert(
 );
 assert(simulated.payment?.simulated === true, "simulation flag must be true");
 
-const analytics = await getJson("/api/analytics");
+const analytics = await getJson("/api/analytics", true);
 assert(
   Number(analytics.summary?.statusCounts?.confirmed ?? 0) >= 1,
   "analytics must include confirmed payments",
 );
 
-const audit = await getJson("/api/audit");
+const audit = await getJson("/api/audit", true);
 assert(
   Array.isArray(audit.events) &&
     audit.events.some((event) => event.paymentId === paymentId),

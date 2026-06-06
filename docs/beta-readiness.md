@@ -6,6 +6,7 @@ long-running merchant operation.
 ## Gate 1: Security
 
 - `KASPAFLOW_ADMIN_TOKEN` is set in every non-local environment.
+- Merchant-only GET endpoints require the admin token.
 - Simulation is disabled with `KASPAFLOW_ENABLE_SIMULATION=false`.
 - Merchant devices are locked and only trusted staff can access the admin panel.
 - Webhook URLs are private and rotateable.

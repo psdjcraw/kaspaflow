@@ -108,7 +108,9 @@ storage cutover plan.
 `KASPAFLOW_ADMIN_TOKEN` is optional for local development. When it is set, API
 requests that create payments, update admin settings, sync/expire payments, or
 record refunds must include the token as `x-kaspaflow-admin-token` or
-`Authorization: Bearer <token>`. The browser UI stores the token in local
+`Authorization: Bearer <token>`. Merchant-only GET endpoints for payment lists,
+analytics, audit logs, error logs, and admin settings require the same token.
+The browser UI stores the token in local
 storage from the merchant admin panel. The realtime `/api/events` stream uses
 the same token as an `adminToken` query parameter because browser EventSource
 cannot attach custom headers.
@@ -190,7 +192,7 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
 - `POST /api/testnet/send` creates a non-custodial wallet handoff URI.
 - `GET /api/wallets` lists saved wallet addresses.
 - `POST /api/wallets` creates, updates, or disables wallet address entries.
-- `GET /api/payments` lists payment requests in the file-backed store.
+- `GET /api/payments` lists payment requests for authenticated merchants.
 - `POST /api/payments` creates a payment request.
 - `GET /api/payments/:id` syncs the request with the watcher and returns status.
 - `POST /api/payments/sync` syncs every open payment with the active watcher.
