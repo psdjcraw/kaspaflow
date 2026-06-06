@@ -923,9 +923,19 @@ export default function Home() {
                       )}
                     </h2>
                   </div>
-                  <span className={`status status-${activePayment.status}`}>
-                    {getStatusLabel(activePayment.status)}
-                  </span>
+                  <div className="button-group">
+                    <a
+                      className="secondary-button"
+                      href={`/payments/${activePayment.id}/display`}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      고객 화면
+                    </a>
+                    <span className={`status status-${activePayment.status}`}>
+                      {getStatusLabel(activePayment.status)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="status-card">
@@ -1256,6 +1266,9 @@ export default function Home() {
                     </button>
                     <a className="detail-link" href={`/payments/${sale.id}`}>
                       상세
+                    </a>
+                    <a className="detail-link" href={`/payments/${sale.id}/display`}>
+                      고객
                     </a>
                     <div>
                       <strong>

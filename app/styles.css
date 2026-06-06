@@ -748,7 +748,7 @@ label {
   background: var(--panel-muted);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(0, 1.3fr) auto minmax(120px, 0.7fr) auto;
+  grid-template-columns: minmax(0, 1.2fr) auto auto minmax(120px, 0.7fr) auto;
   min-height: 76px;
   padding: 14px;
 }
@@ -824,6 +824,123 @@ label {
   overflow-wrap: anywhere;
 }
 
+.customer-display-shell {
+  align-items: center;
+  background:
+    linear-gradient(180deg, rgba(16, 24, 22, 0.86), rgba(16, 24, 22, 0.96)),
+    var(--ink);
+  color: white;
+  display: grid;
+  min-height: 100vh;
+  padding: 18px;
+  position: relative;
+}
+
+.customer-display {
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 1120px;
+  width: 100%;
+}
+
+.customer-copy {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.customer-copy .eyebrow {
+  color: var(--kaspa);
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.customer-copy h1 {
+  color: white;
+  font-size: 76px;
+  margin: 0;
+}
+
+.customer-copy p {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 20px;
+  grid-column: 1 / -1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.customer-qr-card {
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+  display: grid;
+  min-height: 520px;
+  place-items: center;
+}
+
+.customer-qr-card img {
+  width: min(460px, 78vw);
+}
+
+.customer-payment-strip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.customer-payment-strip div,
+.customer-address {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  min-height: 88px;
+  padding: 16px;
+}
+
+.customer-payment-strip span,
+.customer-address span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.customer-payment-strip strong,
+.customer-address code {
+  color: white;
+  overflow-wrap: anywhere;
+}
+
+.customer-address {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.customer-address span,
+.customer-address code {
+  grid-column: 1;
+}
+
+.customer-address button {
+  align-self: center;
+  background: var(--kaspa);
+  border-color: var(--kaspa);
+  color: var(--ink);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.customer-back-link {
+  bottom: 18px;
+  color: rgba(255, 255, 255, 0.72);
+  position: fixed;
+  right: 18px;
+  text-decoration: none;
+}
+
 @media (max-width: 1080px) {
   .pos-grid {
     grid-template-columns: 1fr;
@@ -882,8 +999,24 @@ label {
   .audit-row,
   .detail-grid,
   .payment-detail-hero,
-  .sale-row {
+  .sale-row,
+  .customer-copy,
+  .customer-payment-strip,
+  .customer-address {
     grid-template-columns: 1fr;
+  }
+
+  .customer-copy h1 {
+    font-size: 48px;
+  }
+
+  .customer-qr-card {
+    min-height: 360px;
+  }
+
+  .customer-address button {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .readiness-panel li {
