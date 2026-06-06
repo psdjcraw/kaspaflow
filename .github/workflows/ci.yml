@@ -23,14 +23,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Test
         run: npm test
 
-      - name: Build
-        run: npm run build
+      - name: Production preflight
+        run: |
+          mkdir -p data backups
+          NODE_ENV=production \
+          KASPAFLOW_ADMIN_TOKEN=dummy-production-token \
+          KASPAFLOW_ENABLE_SIMULATION=false \
+          KASPA_NETWORK=mainnet \
+          KASPA_WATCHER_MODE=kaspa-rest \
+          KASPAFLOW_DATA_DIR=./data \
+          KASPAFLOW_BACKUP_DIR=./backups \
+          KASPAFLOW_STORAGE_PROVIDER=file \
+          npm run preflight:prod
+
+      - name: Docker Compose config
+        run: |
+          KASPAFLOW_ADMIN_TOKEN=dummy-production-token \
+          POSTGRES_PASSWORD=kaspaflow-dev \
+          DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@postgres:5432/kaspaflow \
+          KASPAFLOW_STORAGE_PROVIDER=postgres \
+          docker compose --profile postgres config
 
       - name: Audit production dependencies
         run: npm audit --omit=dev
