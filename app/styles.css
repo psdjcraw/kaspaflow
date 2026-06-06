@@ -261,6 +261,7 @@ label {
 .chart-grid,
 .ops-health-grid,
 .sync-strip {
+  align-items: stretch;
   display: grid;
   gap: 12px;
 }
@@ -524,8 +525,17 @@ label {
 .sync-strip div,
 .detail-item,
 .detail-block {
+  align-content: start;
   background: var(--panel-muted);
+  display: grid;
   padding: 14px;
+}
+
+.pay-details div,
+.metric-grid div,
+.ops-health-grid div,
+.sync-strip div {
+  min-height: 86px;
 }
 
 .pay-details span,
@@ -606,6 +616,7 @@ label {
   display: flex;
   gap: 12px;
   justify-content: space-between;
+  min-height: 64px;
   padding: 10px;
 }
 
@@ -616,10 +627,15 @@ label {
 .refund-box,
 .readiness-panel,
 .chart-panel {
+  align-content: start;
   background: var(--panel-muted);
   display: grid;
   gap: 12px;
   padding: 14px;
+}
+
+.chart-panel {
+  min-height: 220px;
 }
 
 .metric-grid,
@@ -724,6 +740,7 @@ label {
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 68px;
   padding: 12px;
 }
 
@@ -732,6 +749,7 @@ label {
   display: grid;
   gap: 12px;
   grid-template-columns: minmax(0, 1.3fr) auto minmax(120px, 0.7fr) auto;
+  min-height: 76px;
   padding: 14px;
 }
 
