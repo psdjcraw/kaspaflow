@@ -65,6 +65,10 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
 KASPAFLOW_ENABLE_SIMULATION=true \
 KASPA_WATCHER_MODE=mock \
   npm run dev -- --port 3003
+
+KASPAFLOW_BASE_URL=http://localhost:3003 \
+KASPAFLOW_ADMIN_TOKEN=dummy \
+  npm run smoke:postgres
 ```
 
 Minimum checks:
@@ -74,6 +78,9 @@ Minimum checks:
 - `POST /api/payments` creates a payment row.
 - `POST /api/payments/:id/simulate` returns the updated status immediately.
 - `GET /api/analytics` and `GET /api/audit` reflect the payment.
+
+`npm run smoke:postgres` performs those checks automatically against the
+configured `KASPAFLOW_BASE_URL`.
 
 ## Backup Command
 
