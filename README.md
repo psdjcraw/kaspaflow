@@ -247,6 +247,7 @@ Before using this with a real merchant:
 - For testnet pilots, follow `docs/testnet-dry-run.md`.
 - For mainnet pilots, follow `docs/operations.md`.
 - For Korean operator handoff, follow `docs/operations-ko.md`.
+- For Korean staff payment handling, follow `docs/staff-playbook-ko.md`.
 - For the beta storage upgrade, follow `docs/database-migration.md` and
   `db/schema.sql`.
 - For beta launch gates, follow `docs/beta-readiness.md`.

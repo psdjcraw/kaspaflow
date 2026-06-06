@@ -4,6 +4,8 @@
 확인해야 할 절차를 정리한다. KaspaFlow는 비수탁형 서비스이며, 가맹점 지갑으로
 Kaspa를 직접 받는다. 서버는 개인키를 저장하거나 송금하지 않는다.
 
+직원용 상태별 처리 절차는 `docs/staff-playbook-ko.md`를 함께 사용한다.
+
 ## 1. 운영 원칙
 
 - 실제 결제는 `KASPA_WATCHER_MODE=kaspa-rest`와 `KASPA_NETWORK=mainnet`으로 운영한다.

@@ -45,6 +45,8 @@ Stop the beta if file storage is the only copy of payment or audit data.
 - Webhook notification delivery is tested.
 - Staff know how to handle `waiting`, `seen`, `underpaid`, `overpaid`, and
   `expired` statuses.
+- Korean staff playbook `docs/staff-playbook-ko.md` has been reviewed by the
+  pilot staff.
 
 Stop the beta if staff cannot explain what to do for underpaid or overpaid
 payments.
