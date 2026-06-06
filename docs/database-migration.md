@@ -71,6 +71,18 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
   npm run smoke:postgres
 ```
 
+Docker Compose beta shape:
+
+```bash
+export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
+export POSTGRES_PASSWORD=<strong-random-password>
+export DATABASE_URL=postgres://kaspaflow:$POSTGRES_PASSWORD@postgres:5432/kaspaflow
+export KASPAFLOW_STORAGE_PROVIDER=postgres
+
+docker compose --profile postgres up --build -d
+docker compose exec kaspaflow npm run db:schema
+```
+
 Minimum checks:
 
 - `GET /api/health` reports `storageProvider: postgres` and `storage.ready: true`.

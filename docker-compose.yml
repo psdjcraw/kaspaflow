@@ -8,7 +8,8 @@ services:
       QUOTE_FIAT: KRW
       KAS_PRICE_SOURCE: auto
       KASPAFLOW_DATA_DIR: /app/data
-      KASPAFLOW_STORAGE_PROVIDER: file
+      KASPAFLOW_BACKUP_DIR: /app/backups
+      KASPAFLOW_STORAGE_PROVIDER: "${KASPAFLOW_STORAGE_PROVIDER:-file}"
       DATABASE_URL: "${DATABASE_URL:-}"
       KASPA_WATCHER_MODE: kaspa-rest
       KASPAFLOW_BACKGROUND_SYNC_ENABLED: "true"
@@ -17,9 +18,12 @@ services:
       KASPA_REST_API_URL: ""
       KASPAFLOW_ENABLE_SIMULATION: "false"
       KASPAFLOW_ADMIN_TOKEN: "${KASPAFLOW_ADMIN_TOKEN:?Set KASPAFLOW_ADMIN_TOKEN before production deploy}"
-      KASPAFLOW_NOTIFY_WEBHOOK_URL: ""
+      KASPAFLOW_NOTIFY_WEBHOOK_URL: "${KASPAFLOW_NOTIFY_WEBHOOK_URL:-}"
+      KASPAFLOW_NOTIFY_WEBHOOK_FORMAT: "${KASPAFLOW_NOTIFY_WEBHOOK_FORMAT:-json}"
+      KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID: "${KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID:-}"
     volumes:
       - kaspaflow-data:/app/data
+      - kaspaflow-backups:/app/backups
     restart: unless-stopped
 
   postgres:
@@ -34,8 +38,14 @@ services:
       - "5432:5432"
     volumes:
       - kaspaflow-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaspaflow -d kaspaflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 volumes:
   kaspaflow-data:
+  kaspaflow-backups:
   kaspaflow-postgres:

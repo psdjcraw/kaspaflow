@@ -20,6 +20,7 @@ NODE_ENV=production
 QUOTE_FIAT=KRW
 KAS_PRICE_SOURCE=auto
 KASPAFLOW_DATA_DIR=/app/data
+KASPAFLOW_BACKUP_DIR=/app/backups
 KASPAFLOW_STORAGE_PROVIDER=file
 KASPA_WATCHER_MODE=kaspa-rest
 KASPAFLOW_BACKGROUND_SYNC_ENABLED=true
@@ -36,6 +37,7 @@ KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID=
 권장값:
 
 - `KAS_PRICE_SOURCE=auto`: KRW는 Coinone, 그 외 통화는 CoinGecko 우선.
+- `KASPAFLOW_BACKUP_DIR`: `npm run backup:data` 백업 저장 위치.
 - `KASPA_REST_API_URL=`: 비워두면 네트워크 기본값을 사용한다.
 - `KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS=15000`: 15초마다 열린 결제를 동기화한다.
 - `KASPAFLOW_NOTIFY_WEBHOOK_URL`: 알림 수신 서버가 있을 때만 설정한다.
