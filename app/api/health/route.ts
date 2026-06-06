@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 import { isAdminAuthEnabled, isAdminAuthRequired } from "@/lib/auth";
 import { getKaspaNetwork, getKaspaRestApiUrl } from "@/lib/kaspa-network";
 import { getKaspaQuote } from "@/lib/price";
+import { getSimulationStatus } from "@/lib/simulation";
 import { getStorageStatus } from "@/lib/storage-provider";
 
 export async function GET() {
   const storage = getStorageStatus();
+  const simulation = getSimulationStatus();
   const backgroundSync = storage.ready
     ? await getFileStorageBackgroundSyncStatus()
     : {
@@ -30,7 +32,9 @@ export async function GET() {
     backgroundSync,
     adminAuthEnabled: isAdminAuthEnabled(),
     adminAuthRequired: isAdminAuthRequired(),
-    simulationEnabled: process.env.KASPAFLOW_ENABLE_SIMULATION === "true",
+    simulationConfigured: simulation.configured,
+    simulationEnabled: simulation.enabled,
+    simulationBlockedInProduction: simulation.blockedInProduction,
     quote: await getKaspaQuote(),
     checkedAt: new Date().toISOString(),
   });

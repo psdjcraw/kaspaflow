@@ -31,7 +31,9 @@ type HealthResponse = {
   watcherMode: string;
   adminAuthEnabled: boolean;
   adminAuthRequired: boolean;
+  simulationConfigured: boolean;
   simulationEnabled: boolean;
+  simulationBlockedInProduction: boolean;
   checkedAt: string;
 };
 
@@ -671,7 +673,11 @@ export default function Home() {
       {
         label: "시뮬레이션 차단",
         ok: health ? !health.simulationEnabled : false,
-        detail: health?.simulationEnabled ? "켜짐" : "꺼짐",
+        detail: health?.simulationEnabled
+          ? "켜짐"
+          : health?.simulationBlockedInProduction
+            ? "production 차단"
+            : "꺼짐",
       },
       {
         label: "체인",
@@ -1146,7 +1152,13 @@ export default function Home() {
               </div>
               <div>
                 <span>시뮬레이션</span>
-                <strong>{health?.simulationEnabled ? "켜짐" : "꺼짐"}</strong>
+                <strong>
+                  {health?.simulationEnabled
+                    ? "켜짐"
+                    : health?.simulationBlockedInProduction
+                      ? "production 차단"
+                      : "꺼짐"}
+                </strong>
               </div>
               <div>
                 <span>REST API</span>

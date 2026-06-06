@@ -74,6 +74,7 @@ curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
 - `backgroundSync.lastError`가 `null`.
 - `adminAuthRequired`가 production에서 `true`, `adminAuthEnabled`가 외부 배포에서 `true`.
 - `simulationEnabled`가 실결제에서 `false`.
+- `simulationBlockedInProduction`이 `true`라면 env에 시뮬레이션이 켜졌지만 production에서 차단된 상태이므로 배포 env를 정리한다.
 - `quote.source`가 정상 운영 중 `coinone` 또는 `coingecko`.
 
 ## 4. 매장 단말 세팅

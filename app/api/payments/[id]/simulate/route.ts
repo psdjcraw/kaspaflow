@@ -5,6 +5,7 @@ import { requireAdminAuth } from "@/lib/auth";
 import { buildKaspaUri, type PaymentStatus } from "@/lib/kaspa";
 import { getPayment, updatePaymentStatus } from "@/lib/payment-store";
 import { sendNotification } from "@/lib/notifications";
+import { getSimulationStatus } from "@/lib/simulation";
 
 type RouteContext = {
   params: Promise<{
@@ -27,9 +28,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return authError;
   }
 
-  if (process.env.KASPAFLOW_ENABLE_SIMULATION !== "true") {
+  const simulation = getSimulationStatus();
+
+  if (!simulation.enabled) {
     return NextResponse.json(
-      { error: "Payment simulation is disabled." },
+      {
+        error: simulation.blockedInProduction
+          ? "Payment simulation is disabled in production."
+          : "Payment simulation is disabled.",
+      },
       { status: 403 },
     );
   }

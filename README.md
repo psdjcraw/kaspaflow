@@ -136,7 +136,8 @@ the interval and is clamped to a minimum of 5000 ms.
 
 `KASPAFLOW_ENABLE_SIMULATION=true` enables the development-only simulation
 endpoint and UI controls for marking payments as seen or confirmed. Leave it
-off for real merchant pilots.
+off for real merchant pilots. Production runtime always blocks the simulation
+endpoint even if the variable is accidentally set to `true`.
 
 `KASPAFLOW_NOTIFY_WEBHOOK_URL` is optional. When configured, KaspaFlow sends
 JSON webhook events for payment creation, bulk sync, and refund activity.
