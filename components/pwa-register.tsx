@@ -9,7 +9,10 @@ export function PWARegister() {
 
     window.addEventListener("load", async () => {
       try {
-        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
+        await registration.update();
         console.log("[PWA] sw registered");
       } catch (err) {
         console.error("[PWA] sw registration failed", err);

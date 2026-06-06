@@ -1,4 +1,4 @@
-const CACHE_NAME = "kaspaflow-shell-v2";
+const CACHE_NAME = "kaspaflow-shell-v3";
 const SHELL_URLS = [
   "/",
   "/offline.html",
