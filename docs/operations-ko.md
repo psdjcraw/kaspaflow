@@ -61,6 +61,8 @@ Docker Compose:
 
 ```bash
 export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
+export KASPAFLOW_BACKUP_DIR=/app/backups
+npm run preflight:prod
 docker compose config
 docker compose up --build -d
 ```

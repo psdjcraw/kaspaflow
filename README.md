@@ -108,6 +108,8 @@ provided; with `--force`, it first moves the current directory aside as a
 `.pre-restore-*` copy.
 Run `npm run reconcile:sales -- YYYY-MM-DD` to generate a local JSON
 reconciliation summary from file-backed payments.
+Run `npm run preflight:prod` before production deploys to check admin auth,
+mainnet watcher, simulation, storage, backup, and notification env.
 
 `KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
 `KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and
