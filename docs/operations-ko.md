@@ -18,6 +18,9 @@ Kaspa를 직접 받는다. 서버는 개인키를 저장하거나 송금하지 �
 
 ## 2. 필수 환경변수
 
+운영 배포는 `.env.production.example`을 복사해 시작하고, 토큰과 저장소 값을 실제
+배포 환경에 맞게 교체한다.
+
 ```bash
 NODE_ENV=production
 QUOTE_FIAT=KRW

@@ -63,6 +63,9 @@ If port 3000 is busy, Next.js will print the fallback port.
 
 ## Configuration
 
+Use `.env.example` for local development and `.env.production.example` as the
+starting point for production deployments.
+
 ```bash
 QUOTE_FIAT=KRW
 KAS_PRICE_SOURCE=auto
