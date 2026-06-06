@@ -30,7 +30,7 @@ export function CustomerDisplayClient({
     void QRCode.toDataURL(kaspaUri, {
       errorCorrectionLevel: "M",
       margin: 1,
-      width: 420,
+      width: 560,
     }).then(setQrDataUrl);
   }, [kaspaUri]);
 
@@ -78,11 +78,16 @@ export function CustomerDisplayClient({
       </div>
 
       <div className="customer-qr-card">
+        <div className="customer-qr-topline">
+          <span>Scan to pay</span>
+          <strong>{payment.kasAmount.toFixed(8)} KAS</strong>
+        </div>
         {qrDataUrl ? (
           <img alt="Kaspa payment QR code" src={qrDataUrl} />
         ) : (
           <div className="qr-placeholder">QR 준비 중</div>
         )}
+        <p>Kaspa 지갑에서 금액과 주소를 확인한 뒤 전송하세요.</p>
       </div>
 
       <div className="customer-payment-strip">
