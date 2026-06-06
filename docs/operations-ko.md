@@ -68,6 +68,7 @@ export KASPAFLOW_BACKUP_DIR=/app/backups
 npm run release:check
 docker compose config
 docker compose up --build -d
+KASPAFLOW_BASE_URL=http://localhost:3000 npm run smoke:prod
 ```
 
 배포 직후 확인:
@@ -77,6 +78,7 @@ curl http://localhost:3000/api/health
 curl http://localhost:3000/api/kaspa/probe
 curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
   -H "x-kaspaflow-admin-token: $KASPAFLOW_ADMIN_TOKEN"
+KASPAFLOW_BASE_URL=http://localhost:3000 npm run smoke:prod
 ```
 
 정상 기준:
@@ -90,6 +92,10 @@ curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
 - `simulationEnabled`가 실결제에서 `false`.
 - `simulationBlockedInProduction`이 `true`라면 env에 시뮬레이션이 켜졌지만 production에서 차단된 상태이므로 배포 env를 정리한다.
 - `quote.source`가 정상 운영 중 `coinone` 또는 `coingecko`.
+
+`npm run smoke:prod`는 배포 후 URL 기준 점검이다. `/api/health`,
+`/api/kaspa/probe`, 인증된 `/api/admin`, 수동 sync를 확인하며 결제 데이터를 새로
+만들지 않는다.
 
 `npm run release:check`는 배포 전 로컬 gate다. `build`, `typecheck`,
 `test`, `preflight:prod`, Docker Compose config, 운영 dependency audit을

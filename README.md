@@ -178,6 +178,7 @@ npm run docker:down
 npm run db:schema
 npm run db:export -- db/kaspaflow-import.sql
 npm run smoke:postgres
+npm run smoke:prod
 ```
 
 The compose file mounts `/app/data` as a persistent volume. Set
@@ -202,6 +203,15 @@ KASPAFLOW_ENABLE_SIMULATION=true \
 KASPAFLOW_BASE_URL=http://localhost:3003 \
 KASPAFLOW_ADMIN_TOKEN=dummy \
   npm run smoke:postgres
+```
+
+After a production deploy, run a non-mutating smoke check against the deployed
+URL:
+
+```bash
+KASPAFLOW_BASE_URL=https://your-kaspaflow-host.example \
+KASPAFLOW_ADMIN_TOKEN=<strong-random-token> \
+  npm run smoke:prod
 ```
 
 ## API

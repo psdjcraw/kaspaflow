@@ -17,6 +17,7 @@
     "db:schema": "node scripts/apply-postgres-schema.mjs",
     "db:export": "node scripts/export-postgres-sql.mjs",
     "smoke:postgres": "node scripts/smoke-postgres-api.mjs",
+    "smoke:prod": "node scripts/smoke-production-api.mjs",
     "docker:config": "docker compose config",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"
