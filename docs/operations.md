@@ -10,6 +10,7 @@ NODE_ENV=production
 QUOTE_FIAT=KRW
 KAS_PRICE_SOURCE=auto
 KASPAFLOW_DATA_DIR=/app/data
+KASPAFLOW_STORAGE_PROVIDER=file
 KASPA_WATCHER_MODE=kaspa-rest
 KASPAFLOW_BACKGROUND_SYNC_ENABLED=true
 KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS=15000
@@ -45,11 +46,14 @@ curl http://localhost:3000/api/health
 curl http://localhost:3000/api/kaspa/probe
 curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
   -H 'x-kaspaflow-admin-token: <strong-random-token>'
+curl -X POST http://localhost:3000/api/reports/daily \
+  -H 'x-kaspaflow-admin-token: <strong-random-token>'
 ```
 
 Expected:
 
 - `watcherMode` is `kaspa-rest`.
+- `storageProvider` is `file` during the pilot.
 - `backgroundSync.enabled` is `true`.
 - `backgroundSync.lastError` is `null`.
 - `quote.source` is `coinone` or `coingecko` during normal live operation.

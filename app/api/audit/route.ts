@@ -4,6 +4,6 @@ import { listAuditEvents } from "@/lib/audit-store";
 
 export async function GET() {
   return NextResponse.json({
-    events: listAuditEvents(),
+    events: await listAuditEvents(),
   });
 }

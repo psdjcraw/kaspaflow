@@ -16,11 +16,11 @@ export async function GET(request: Request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      const send = () => {
+      const send = async () => {
         const payload = {
-          payments: listPayments(),
-          analytics: getSalesSummary(),
-          auditEvents: listAuditEvents(8),
+          payments: await listPayments(),
+          analytics: await getSalesSummary(),
+          auditEvents: await listAuditEvents(8),
           sentAt: new Date().toISOString(),
         };
         controller.enqueue(
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
         }
       };
       const interval = setInterval(send, 3000);
-      send();
+      void send();
     },
   });
 

@@ -9,7 +9,7 @@ import {
 } from "@/lib/wallet-store";
 
 export async function GET() {
-  return NextResponse.json({ addresses: listWalletAddresses() });
+  return NextResponse.json({ addresses: await listWalletAddresses() });
 }
 
 export async function POST(request: NextRequest) {
@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
     const action = String(body.action ?? "upsert");
 
     if (action === "status") {
-      const addresses = setWalletAddressActive(
+      const addresses = await setWalletAddressActive(
         String(body.id ?? ""),
         Boolean(body.active),
       );
-      appendAuditEvent({
+      await appendAuditEvent({
         type: "wallet.status",
         message: "Changed wallet address active status.",
         metadata: {
@@ -40,15 +40,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ addresses });
     }
 
-    const addresses = upsertWalletAddress(body.address ?? {});
-    appendAuditEvent({
+    const addresses = await upsertWalletAddress(body.address ?? {});
+    await appendAuditEvent({
       type: "wallet.upsert",
       message: "Updated wallet address book.",
     });
 
     return NextResponse.json({ addresses });
   } catch (error) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "wallet.failed",
       message: error instanceof Error ? error.message : "Invalid wallet request.",
     });

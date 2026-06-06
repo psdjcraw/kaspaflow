@@ -8,6 +8,8 @@ services:
       QUOTE_FIAT: KRW
       KAS_PRICE_SOURCE: auto
       KASPAFLOW_DATA_DIR: /app/data
+      KASPAFLOW_STORAGE_PROVIDER: file
+      DATABASE_URL: "${DATABASE_URL:-}"
       KASPA_WATCHER_MODE: kaspa-rest
       KASPAFLOW_BACKGROUND_SYNC_ENABLED: "true"
       KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS: "15000"
@@ -20,5 +22,20 @@ services:
       - kaspaflow-data:/app/data
     restart: unless-stopped
 
+  postgres:
+    image: postgres:16-alpine
+    profiles:
+      - postgres
+    environment:
+      POSTGRES_DB: kaspaflow
+      POSTGRES_USER: kaspaflow
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before starting postgres profile}"
+    ports:
+      - "5432:5432"
+    volumes:
+      - kaspaflow-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
 volumes:
   kaspaflow-data:
+  kaspaflow-postgres:

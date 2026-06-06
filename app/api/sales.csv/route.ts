@@ -1,7 +1,7 @@
 import { listPayments } from "@/lib/payment-store";
 
 export async function GET() {
-  const rows = listPayments();
+  const rows = await listPayments();
   const header = [
     "id",
     "merchantName",

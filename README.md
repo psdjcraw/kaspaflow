@@ -71,6 +71,8 @@ KAS_USD_RATE=0.25
 KAS_EUR_RATE=0.23
 KAS_JPY_RATE=39
 KASPAFLOW_DATA_DIR=./data
+KASPAFLOW_STORAGE_PROVIDER=file
+DATABASE_URL=
 KASPA_WATCHER_MODE=mock
 KASPAFLOW_BACKGROUND_SYNC_ENABLED=true
 KASPAFLOW_BACKGROUND_SYNC_INTERVAL_MS=15000
@@ -95,6 +97,12 @@ Mock defaults are only used when live requests fail or when
 
 `KASPAFLOW_DATA_DIR` controls where `payments.json` is written. The default is
 `./data`, which is ignored by git.
+
+`KASPAFLOW_STORAGE_PROVIDER` should stay `file` until the PostgreSQL adapter is
+implemented. Setting it to `postgres` intentionally stops the file-backed stores
+from serving as a silent fallback. `DATABASE_URL` is reserved for the Postgres
+adapter. Use `docs/database-migration.md` and `db/schema.sql` for the beta
+storage cutover plan.
 
 `KASPAFLOW_ADMIN_TOKEN` is optional for local development. When it is set, API
 requests that create payments, update admin settings, sync/expire payments, or
@@ -140,6 +148,7 @@ Or use the package scripts:
 npm run docker:config
 npm run docker:up
 npm run docker:down
+npm run db:export -- db/kaspaflow-import.sql
 ```
 
 The compose file mounts `/app/data` as a persistent volume. Set
@@ -173,6 +182,8 @@ container outside a local pilot network.
 - `GET /api/audit` returns recent payment, refund, admin, and sync events.
 - `GET /api/events` streams realtime payment, dashboard, and audit updates.
 - `GET /api/errors` returns recent failed/rejected operational events.
+- `GET /api/reports/daily` returns the current daily sales report.
+- `POST /api/reports/daily` sends the daily sales report to the configured webhook.
 - `GET /api/sales.csv` downloads the current sales log.
 - `GET /payments/:id` opens the merchant-facing payment detail page.
 
@@ -196,6 +207,10 @@ Before using this with a real merchant:
 - Replace the placeholder Kaspa address.
 - For testnet pilots, follow `docs/testnet-dry-run.md`.
 - For mainnet pilots, follow `docs/operations.md`.
+- For Korean operator handoff, follow `docs/operations-ko.md`.
+- For the beta storage upgrade, follow `docs/database-migration.md` and
+  `db/schema.sql`.
+- For beta launch gates, follow `docs/beta-readiness.md`.
 - Use `KAS_PRICE_SOURCE=auto`, `coinone`, or `coingecko` for live quotes.
 - Test `kaspa-rest` watcher mode with small real payments.
 - Refunds are non-custodial: the merchant sends funds from their own wallet,

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       note: "KaspaFlow does not hold private keys. Sign and broadcast this request in a wallet.",
     };
 
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "testnet.send-handoff",
       message: `Created testnet send handoff ${handoff.id}.`,
       metadata: {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ handoff }, { status: 201 });
   } catch (error) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "testnet.send-failed",
       message: error instanceof Error ? error.message : "Invalid send request.",
     });

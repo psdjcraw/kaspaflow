@@ -9,6 +9,12 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import {
+  appendPostgresAuditEvent,
+  listPostgresAuditEvents,
+} from "./postgres-store";
+import { assertFileStorageProvider, getStorageProvider } from "./storage-provider";
+
 export type AuditEvent = {
   id: string;
   type: string;
@@ -26,33 +32,44 @@ declare global {
   var kaspaflowAuditStore: AuditState | undefined;
 }
 
-const auditStore =
-  globalThis.kaspaflowAuditStore ??
-  (globalThis.kaspaflowAuditStore = loadAuditStore());
+export async function listAuditEvents(limit = 30) {
+  if (getStorageProvider() === "postgres") {
+    return listPostgresAuditEvents(limit);
+  }
 
-export function listAuditEvents(limit = 30) {
-  return auditStore.events
+  return getAuditStore().events
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit);
 }
 
-export function appendAuditEvent(
+export async function appendAuditEvent(
   event: Omit<AuditEvent, "id" | "createdAt">,
 ) {
+  if (getStorageProvider() === "postgres") {
+    return appendPostgresAuditEvent(event);
+  }
+
   const nextEvent: AuditEvent = {
     ...event,
     id: `AUD-${Date.now().toString(36).toUpperCase()}`,
     createdAt: new Date().toISOString(),
   };
 
+  const auditStore = getAuditStore();
   auditStore.events.unshift(nextEvent);
   auditStore.events = auditStore.events.slice(0, 500);
   persistAuditStore();
   return nextEvent;
 }
 
+function getAuditStore() {
+  return globalThis.kaspaflowAuditStore ??
+    (globalThis.kaspaflowAuditStore = loadAuditStore());
+}
+
 function getAuditStorePath() {
+  assertFileStorageProvider("audit-store");
   const dataDir =
     process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
 
@@ -75,6 +92,7 @@ function loadAuditStore(): AuditState {
 
 function persistAuditStore() {
   const storePath = getAuditStorePath();
+  const auditStore = getAuditStore();
   mkdirSync(path.dirname(storePath), { recursive: true });
   writeFileSync(`${storePath}.tmp`, JSON.stringify(auditStore, null, 2));
   renameSync(`${storePath}.tmp`, storePath);

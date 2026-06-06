@@ -15,6 +15,15 @@ import {
   isKaspaAddress,
   type FiatCurrency,
 } from "./kaspa";
+import {
+  getPostgresMerchantSettings,
+  setPostgresActiveStore,
+  setPostgresEmployeeActive,
+  updatePostgresMerchantSettings,
+  upsertPostgresEmployee,
+  upsertPostgresStore,
+} from "./postgres-store";
+import { assertFileStorageProvider, getStorageProvider } from "./storage-provider";
 
 export type MerchantEmployee = {
   id: string;
@@ -70,17 +79,23 @@ const defaultSettings: MerchantSettings = {
   updatedAt: new Date().toISOString(),
 };
 
-const settings =
-  globalThis.kaspaflowMerchantSettings ??
-  (globalThis.kaspaflowMerchantSettings = loadSettings());
+export async function getMerchantSettings() {
+  if (getStorageProvider() === "postgres") {
+    return getPostgresMerchantSettings();
+  }
 
-export function getMerchantSettings() {
-  return settings;
+  return getFileSettings();
 }
 
-export function updateMerchantSettings(
+export async function updateMerchantSettings(
   input: Partial<Omit<MerchantSettings, "employees" | "updatedAt">>,
 ) {
+  if (getStorageProvider() === "postgres") {
+    return updatePostgresMerchantSettings(input);
+  }
+
+  const settings = getFileSettings();
+
   if (input.merchantName !== undefined) {
     if (!input.merchantName.trim()) {
       throw new Error("Merchant name is required.");
@@ -111,7 +126,13 @@ export function updateMerchantSettings(
   return settings;
 }
 
-export function upsertStore(input: Partial<MerchantStore>) {
+export async function upsertStore(input: Partial<MerchantStore>) {
+  if (getStorageProvider() === "postgres") {
+    validateStoreInput(input);
+    return upsertPostgresStore(input);
+  }
+
+  const settings = getFileSettings();
   const name = String(input.name ?? "").trim();
   const merchantAddress = String(input.merchantAddress ?? "").trim();
   const defaultCurrency = input.defaultCurrency ?? settings.defaultCurrency;
@@ -152,7 +173,12 @@ export function upsertStore(input: Partial<MerchantStore>) {
   return settings;
 }
 
-export function setActiveStore(id: string) {
+export async function setActiveStore(id: string) {
+  if (getStorageProvider() === "postgres") {
+    return setPostgresActiveStore(id);
+  }
+
+  const settings = getFileSettings();
   const store = settings.stores.find((entry) => entry.id === id);
 
   if (!store) {
@@ -168,7 +194,13 @@ export function setActiveStore(id: string) {
   return settings;
 }
 
-export function upsertEmployee(input: Partial<MerchantEmployee>) {
+export async function upsertEmployee(input: Partial<MerchantEmployee>) {
+  if (getStorageProvider() === "postgres") {
+    validateEmployeeInput(input);
+    return upsertPostgresEmployee(input);
+  }
+
+  const settings = getFileSettings();
   const name = String(input.name ?? "").trim();
   const role = String(input.role ?? "").trim();
 
@@ -202,7 +234,12 @@ export function upsertEmployee(input: Partial<MerchantEmployee>) {
   return settings;
 }
 
-export function setEmployeeActive(id: string, active: boolean) {
+export async function setEmployeeActive(id: string, active: boolean) {
+  if (getStorageProvider() === "postgres") {
+    return setPostgresEmployeeActive(id, active);
+  }
+
+  const settings = getFileSettings();
   const employee = settings.employees.find((entry) => entry.id === id);
 
   if (!employee) {
@@ -215,7 +252,13 @@ export function setEmployeeActive(id: string, active: boolean) {
   return settings;
 }
 
+function getFileSettings() {
+  return globalThis.kaspaflowMerchantSettings ??
+    (globalThis.kaspaflowMerchantSettings = loadSettings());
+}
+
 function getSettingsPath() {
+  assertFileStorageProvider("merchant-store");
   const dataDir =
     process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
 
@@ -242,6 +285,7 @@ function loadSettings(): MerchantSettings {
 
 function persistSettings() {
   const settingsPath = getSettingsPath();
+  const settings = getFileSettings();
   mkdirSync(path.dirname(settingsPath), { recursive: true });
   writeFileSync(`${settingsPath}.tmp`, JSON.stringify(settings, null, 2));
   renameSync(`${settingsPath}.tmp`, settingsPath);
@@ -273,6 +317,7 @@ function normalizeSettings(value: MerchantSettings): MerchantSettings {
 }
 
 function syncActiveStoreFromSettings() {
+  const settings = getFileSettings();
   const store = settings.stores.find((entry) => entry.id === settings.activeStoreId);
 
   if (!store) {
@@ -282,4 +327,35 @@ function syncActiveStoreFromSettings() {
   store.name = settings.merchantName;
   store.merchantAddress = settings.merchantAddress;
   store.defaultCurrency = settings.defaultCurrency;
+}
+
+function validateStoreInput(input: Partial<MerchantStore>) {
+  const name = String(input.name ?? "").trim();
+  const merchantAddress = String(input.merchantAddress ?? "").trim();
+  const defaultCurrency = input.defaultCurrency ?? "KRW";
+
+  if (!name) {
+    throw new Error("Store name is required.");
+  }
+
+  if (!isKaspaAddress(merchantAddress)) {
+    throw new Error("A valid Kaspa address is required.");
+  }
+
+  if (!isFiatCurrency(defaultCurrency)) {
+    throw new Error("Unsupported fiat currency.");
+  }
+}
+
+function validateEmployeeInput(input: Partial<MerchantEmployee>) {
+  const name = String(input.name ?? "").trim();
+  const role = String(input.role ?? "").trim();
+
+  if (!name) {
+    throw new Error("Employee name is required.");
+  }
+
+  if (!role) {
+    throw new Error("Employee role is required.");
+  }
 }

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     const { id } = await context.params;
-    const payment = getPayment(id);
+    const payment = await getPayment(id);
 
     if (!payment) {
       return NextResponse.json({ error: "Payment not found." }, { status: 404 });
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       checkedAt: txHash ? new Date().toISOString() : payment.refund?.checkedAt,
     };
 
-    const nextPayment = updatePaymentRefund(id, refund);
-    appendAuditEvent({
+    const nextPayment = await updatePaymentRefund(id, refund);
+    await appendAuditEvent({
       type: txHash ? "refund.tx-provided" : "refund.requested",
       message: txHash
         ? `Refund transaction provided for ${id}.`
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       payment: await verifyAndStoreRefund(id, txHash, customerAddress, kasAmount),
     });
   } catch (error) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "refund.failed",
       message: error instanceof Error ? error.message : "Invalid refund request.",
     });
@@ -109,7 +109,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const payment = getPayment(id);
+  const payment = await getPayment(id);
   const refund = payment?.refund;
 
   if (!payment || !refund?.txHash || !refund.customerAddress || !refund.kasAmount) {
@@ -138,7 +138,7 @@ async function verifyAndStoreRefund(
     kasAmount,
   );
   const now = new Date().toISOString();
-  appendAuditEvent({
+  await appendAuditEvent({
     type: `refund.${verification.status}`,
     message: verification.note,
     paymentId,

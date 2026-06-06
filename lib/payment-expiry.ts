@@ -9,12 +9,15 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { assertFileStorageProvider } from "./storage-provider";
+
 interface ExpiryState {
   lastRun: string;
   expiredIds: string[];
 }
 
 function getStatePath(): string {
+  assertFileStorageProvider("payment-expiry");
   const dataDir =
     process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
 

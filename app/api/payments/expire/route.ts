@@ -11,10 +11,10 @@ export async function POST(request: Request) {
     return authError;
   }
 
-  const summary = expireExpiredPayments();
+  const summary = await expireExpiredPayments();
 
   if (summary.changed) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payments.expired",
       message: `Expired ${summary.changed} stale payments.`,
       metadata: {

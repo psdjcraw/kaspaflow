@@ -24,7 +24,7 @@ export class MockKaspaPaymentWatcher implements KaspaPaymentWatcher {
   async observePayment(
     paymentId: string,
   ): Promise<ChainPaymentObservation | null> {
-    const payment = getPayment(paymentId);
+    const payment = await getPayment(paymentId);
 
     if (!payment) {
       return null;
@@ -64,7 +64,7 @@ export class KaspaRestPaymentWatcher implements KaspaPaymentWatcher {
   async observePayment(
     paymentId: string,
   ): Promise<ChainPaymentObservation | null> {
-    const payment = getPayment(paymentId);
+    const payment = await getPayment(paymentId);
 
     if (!payment) {
       return null;
@@ -115,7 +115,7 @@ export async function syncPaymentFromWatcher(paymentId: string) {
 }
 
 export async function syncOpenPaymentsFromWatcher() {
-  const openPayments = listPayments().filter((payment) =>
+  const openPayments = (await listPayments()).filter((payment) =>
     ["waiting", "seen", "underpaid"].includes(payment.status)
   );
   const results = [];

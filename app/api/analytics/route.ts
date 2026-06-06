@@ -4,7 +4,7 @@ import { getSalesSummary } from "@/lib/payment-store";
 
 export async function GET() {
   return NextResponse.json({
-    summary: getSalesSummary(),
+    summary: await getSalesSummary(),
     generatedAt: new Date().toISOString(),
   });
 }

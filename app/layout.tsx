@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { PWARegister } from "@/components/pwa-register";
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -31,7 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        {children}
+        <PWARegister />
+      </body>
     </html>
   );
 }

@@ -76,14 +76,14 @@ describe("Kaspa watcher refund verification", () => {
       vi.fn(async () => Response.json([])),
     );
 
-    const payment = createPayment({
+    const payment = await createPayment({
       merchantName: "Watcher Test",
       merchantAddress: DEFAULT_MERCHANT_ADDRESS,
       fiatAmount: 1000,
       fiatCurrency: "KRW",
       rateFiatPerKas: 50,
     });
-    updatePaymentStatus(payment.id, "seen", {
+    await updatePaymentStatus(payment.id, "seen", {
       txHash: "seen-tx",
       receivedKasAmount: payment.kasAmount,
     });
@@ -103,14 +103,14 @@ describe("Kaspa watcher refund verification", () => {
     const fetchMock = vi.fn(async () => Response.json([]));
     vi.stubGlobal("fetch", fetchMock);
 
-    const payment = createPayment({
+    const payment = await createPayment({
       merchantName: "Terminal Watcher Test",
       merchantAddress: DEFAULT_MERCHANT_ADDRESS,
       fiatAmount: 1000,
       fiatCurrency: "KRW",
       rateFiatPerKas: 50,
     });
-    updatePaymentStatus(payment.id, "confirmed", {
+    await updatePaymentStatus(payment.id, "confirmed", {
       txHash: "confirmed-tx",
       receivedKasAmount: payment.kasAmount,
     });

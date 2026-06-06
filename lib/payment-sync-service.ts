@@ -19,7 +19,7 @@ export async function runPaymentSync({
   const message = `Synced ${summary.checked} open payments, ${summary.changed} changed.`;
 
   if (!silent || summary.changed > 0) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payments.sync",
       message,
       metadata: {
@@ -44,7 +44,7 @@ export async function runPaymentSync({
   for (const result of summary.results.filter((entry) =>
     entry.beforeStatus !== entry.afterStatus
   )) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payment.status-changed",
       message: `Payment ${result.id} changed from ${result.beforeStatus} to ${result.afterStatus}.`,
       paymentId: result.id,

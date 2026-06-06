@@ -27,6 +27,7 @@ type HealthResponse = {
   ok: boolean;
   kaspaNetwork: string;
   kaspaRestApiUrl: string;
+  storageProvider: string;
   watcherMode: string;
   adminAuthEnabled: boolean;
   simulationEnabled: boolean;
@@ -102,6 +103,19 @@ type ExpirySummary = {
   expiredIds: string[];
 };
 
+type DailyReportResponse = {
+  period: string;
+  today: {
+    fiatAmount: number;
+    kasAmount: number;
+    count: number;
+  };
+  notification?: {
+    sent: boolean;
+    reason: string;
+  };
+};
+
 const QUOTE_REFRESH_INTERVAL_MS = 15_000;
 const AUTO_SYNC_INTERVAL_MS = 15_000;
 
@@ -131,6 +145,7 @@ export default function Home() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
   const [expirySummary, setExpirySummary] = useState<ExpirySummary | null>(null);
+  const [dailyReport, setDailyReport] = useState<DailyReportResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [lastAutoSyncAt, setLastAutoSyncAt] = useState("");
@@ -174,12 +189,6 @@ export default function Home() {
 
   useEffect(() => {
     setAdminToken(window.localStorage.getItem("kaspaflow-admin-token") ?? "");
-  }, []);
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js");
-    }
   }, []);
 
   useEffect(() => {
@@ -352,6 +361,20 @@ export default function Home() {
       await refreshAnalytics();
       await refreshAudit();
       await refreshHealth();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unknown error.");
+    }
+  }
+
+  async function handleSendDailyReport() {
+    setError("");
+
+    try {
+      const payload = await fetchJson<DailyReportResponse>("/api/reports/daily", {
+        method: "POST",
+      });
+      setDailyReport(payload);
+      await refreshAudit();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unknown error.");
     }
@@ -628,6 +651,42 @@ export default function Home() {
   const activePaymentTiming = activePayment
     ? getPaymentTiming(activePayment, now)
     : null;
+  const readinessChecks = useMemo(() => {
+    const checks = [
+      {
+        label: "REST watcher",
+        ok: health?.watcherMode === "kaspa-rest",
+        detail: health?.watcherMode ?? "-",
+      },
+      {
+        label: "관리자 보호",
+        ok: Boolean(health?.adminAuthEnabled),
+        detail: health?.adminAuthEnabled ? "켜짐" : "꺼짐",
+      },
+      {
+        label: "시뮬레이션 차단",
+        ok: health ? !health.simulationEnabled : false,
+        detail: health?.simulationEnabled ? "켜짐" : "꺼짐",
+      },
+      {
+        label: "체인",
+        ok: health?.kaspaNetwork === "mainnet",
+        detail: health?.kaspaNetwork ?? "-",
+      },
+      {
+        label: "저장소",
+        ok: health?.storageProvider !== "file",
+        detail: health?.storageProvider === "file"
+          ? "파일럿 모드"
+          : health?.storageProvider ?? "-",
+      },
+    ];
+
+    return {
+      checks,
+      passed: checks.filter((check) => check.ok).length,
+    };
+  }, [health]);
   const isUsingDefaultMerchantAddress =
     merchantAddress.trim().toLowerCase() ===
     DEFAULT_MERCHANT_ADDRESS.toLowerCase();
@@ -1012,6 +1071,9 @@ export default function Home() {
                 <button type="button" onClick={() => void handleSyncPayments()}>
                   전체 동기화
                 </button>
+                <button type="button" onClick={() => void handleSendDailyReport()}>
+                  일일 리포트
+                </button>
               </div>
             </div>
 
@@ -1023,6 +1085,10 @@ export default function Home() {
               <div>
                 <span>Watcher</span>
                 <strong>{health?.watcherMode ?? "-"}</strong>
+              </div>
+              <div>
+                <span>저장소</span>
+                <strong>{health?.storageProvider ?? "-"}</strong>
               </div>
               <div>
                 <span>관리자 보호</span>
@@ -1038,6 +1104,24 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="readiness-panel">
+              <div>
+                <span>운영 준비도</span>
+                <strong>
+                  {readinessChecks.passed}/{readinessChecks.checks.length}
+                </strong>
+              </div>
+              <ul>
+                {readinessChecks.checks.map((check) => (
+                  <li key={check.label}>
+                    <span className={`readiness-dot ${check.ok ? "ok" : "warn"}`} />
+                    <strong>{check.label}</strong>
+                    <em>{check.detail}</em>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {health && health.watcherMode !== "kaspa-rest" ? (
               <p className="warning-text">
                 실제 입금 감시가 꺼져 있습니다. 운영 전 watcher를 kaspa-rest로
@@ -1049,6 +1133,13 @@ export default function Home() {
               <p className="warning-text">
                 관리자 토큰 보호가 꺼져 있습니다. 외부에 노출하기 전
                 KASPAFLOW_ADMIN_TOKEN을 설정하세요.
+              </p>
+            ) : null}
+
+            {health && health.storageProvider === "file" ? (
+              <p className="warning-text">
+                파일 저장소 모드입니다. 파일럿 종료 후 베타 전환 전에는
+                docs/database-migration.md 기준으로 DB 이전을 진행하세요.
               </p>
             ) : null}
 
@@ -1090,6 +1181,16 @@ export default function Home() {
                 <strong>{expirySummary?.changed ?? analytics?.expiry?.count ?? 0}</strong>
               </div>
             </div>
+
+            {dailyReport ? (
+              <p className="muted-copy">
+                {dailyReport.period} 리포트: {dailyReport.today.count}건,
+                {" "}
+                {formatFiat(dailyReport.today.fiatAmount, "KRW")} / 알림
+                {" "}
+                {dailyReport.notification?.reason ?? "generated"}
+              </p>
+            ) : null}
 
             <div className="audit-list">
               {auditEvents.length ? (

@@ -12,7 +12,7 @@ import {
 } from "@/lib/merchant-store";
 
 export async function GET() {
-  return NextResponse.json({ settings: getMerchantSettings() });
+  return NextResponse.json({ settings: await getMerchantSettings() });
 }
 
 export async function POST(request: NextRequest) {
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     const action = String(body.action ?? "settings");
 
     if (action === "employee") {
-      const settings = upsertEmployee(body.employee ?? {});
-      appendAuditEvent({
+      const settings = await upsertEmployee(body.employee ?? {});
+      await appendAuditEvent({
         type: "admin.employee",
         message: "Updated merchant employee list.",
       });
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "employee-status") {
-      const settings = setEmployeeActive(
+      const settings = await setEmployeeActive(
         String(body.id ?? ""),
         Boolean(body.active),
       );
-      appendAuditEvent({
+      await appendAuditEvent({
         type: "admin.employee-status",
         message: "Changed employee active status.",
         metadata: {
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "store") {
-      const settings = upsertStore(body.store ?? {});
-      appendAuditEvent({
+      const settings = await upsertStore(body.store ?? {});
+      await appendAuditEvent({
         type: "admin.store",
         message: "Updated merchant store list.",
       });
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "active-store") {
-      const settings = setActiveStore(String(body.id ?? ""));
-      appendAuditEvent({
+      const settings = await setActiveStore(String(body.id ?? ""));
+      await appendAuditEvent({
         type: "admin.active-store",
         message: "Changed active merchant store.",
         metadata: {
@@ -84,12 +84,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const settings = updateMerchantSettings({
+    const settings = await updateMerchantSettings({
       merchantName: body.merchantName,
       merchantAddress: body.merchantAddress,
       defaultCurrency: body.defaultCurrency,
     });
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "admin.settings",
       message: "Updated merchant settings.",
     });
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       settings,
     });
   } catch (error) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "admin.failed",
       message: error instanceof Error ? error.message : "Invalid admin request.",
     });

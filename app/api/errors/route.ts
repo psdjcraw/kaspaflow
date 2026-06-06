@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { listAuditEvents } from "@/lib/audit-store";
 
 export async function GET() {
-  const events = listAuditEvents(200);
+  const events = await listAuditEvents(200);
   const errors = events.filter((event) =>
     event.type.includes("failed") ||
     event.type.includes("rejected") ||

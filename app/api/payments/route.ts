@@ -11,7 +11,7 @@ import { getKaspaQuote } from "@/lib/price";
 export async function GET() {
   startBackgroundPaymentSync();
 
-  return NextResponse.json({ payments: listPayments() });
+  return NextResponse.json({ payments: await listPayments() });
 }
 
 export async function POST(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const quote = await getKaspaQuote(String(body.fiatCurrency ?? "KRW"));
-    const payment = createPayment({
+    const payment = await createPayment({
       merchantName: String(body.merchantName ?? ""),
       merchantAddress: String(body.merchantAddress ?? ""),
       fiatAmount: Number(body.fiatAmount ?? body.krwAmount),
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     });
     startBackgroundPaymentSync();
 
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payment.created",
       message: `Created payment ${payment.id}.`,
       paymentId: payment.id,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payment.create-failed",
       message: error instanceof Error ? error.message : "Invalid request.",
     });

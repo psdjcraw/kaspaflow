@@ -35,7 +35,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const payment = getPayment(id);
+  const payment = await getPayment(id);
 
   if (!payment) {
     return NextResponse.json({ error: "Payment not found." }, { status: 404 });
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           `simulated-${payment.id.toLowerCase()}-${Date.now().toString(36)}`,
       );
 
-  const updatedPayment = updatePaymentStatus(payment.id, status, {
+  const updatedPayment = await updatePaymentStatus(payment.id, status, {
     txHash,
     receivedKasAmount,
     simulated: true,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Payment not found." }, { status: 404 });
   }
 
-  appendAuditEvent({
+  await appendAuditEvent({
     type: "payment.simulated",
     message: `Simulated payment ${payment.id} as ${status}.`,
     paymentId: payment.id,
@@ -102,7 +102,7 @@ function isSimulatedStatus(status: PaymentStatus): status is (typeof SIMULATED_S
 
 function getSimulatedKasAmount(
   value: unknown,
-  payment: ReturnType<typeof getPayment> extends infer T ? NonNullable<T> : never,
+  payment: Awaited<ReturnType<typeof getPayment>> extends infer T ? NonNullable<T> : never,
 ) {
   const parsed = Number(value);
 

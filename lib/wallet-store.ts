@@ -11,6 +11,12 @@ import path from "node:path";
 
 import { isKaspaAddress } from "./kaspa";
 import { getKaspaNetwork, type KaspaNetwork } from "./kaspa-network";
+import {
+  listPostgresWalletAddresses,
+  setPostgresWalletAddressActive,
+  upsertPostgresWalletAddress,
+} from "./postgres-store";
+import { assertFileStorageProvider, getStorageProvider } from "./storage-provider";
 
 export type WalletAddressRecord = {
   id: string;
@@ -30,17 +36,17 @@ declare global {
   var kaspaflowWalletStore: WalletState | undefined;
 }
 
-const walletStore =
-  globalThis.kaspaflowWalletStore ??
-  (globalThis.kaspaflowWalletStore = loadWalletStore());
+export async function listWalletAddresses() {
+  if (getStorageProvider() === "postgres") {
+    return listPostgresWalletAddresses();
+  }
 
-export function listWalletAddresses() {
-  return walletStore.addresses
+  return getWalletStore().addresses
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function upsertWalletAddress(
+export async function upsertWalletAddress(
   input: Partial<WalletAddressRecord>,
 ) {
   const label = String(input.label ?? "").trim();
@@ -59,6 +65,11 @@ export function upsertWalletAddress(
     throw new Error("testnet-10 wallet entries require a kaspatest: address.");
   }
 
+  if (getStorageProvider() === "postgres") {
+    return upsertPostgresWalletAddress(input);
+  }
+
+  const walletStore = getWalletStore();
   const existing = input.id
     ? walletStore.addresses.find((entry) => entry.id === input.id)
     : null;
@@ -85,8 +96,12 @@ export function upsertWalletAddress(
   return listWalletAddresses();
 }
 
-export function setWalletAddressActive(id: string, active: boolean) {
-  const entry = walletStore.addresses.find((address) => address.id === id);
+export async function setWalletAddressActive(id: string, active: boolean) {
+  if (getStorageProvider() === "postgres") {
+    return setPostgresWalletAddressActive(id, active);
+  }
+
+  const entry = getWalletStore().addresses.find((address) => address.id === id);
 
   if (!entry) {
     throw new Error("Wallet address not found.");
@@ -97,7 +112,13 @@ export function setWalletAddressActive(id: string, active: boolean) {
   return listWalletAddresses();
 }
 
+function getWalletStore() {
+  return globalThis.kaspaflowWalletStore ??
+    (globalThis.kaspaflowWalletStore = loadWalletStore());
+}
+
 function getWalletStorePath() {
+  assertFileStorageProvider("wallet-store");
   const dataDir =
     process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
 
@@ -120,6 +141,7 @@ function loadWalletStore(): WalletState {
 
 function persistWalletStore() {
   const storePath = getWalletStorePath();
+  const walletStore = getWalletStore();
   mkdirSync(path.dirname(storePath), { recursive: true });
   writeFileSync(`${storePath}.tmp`, JSON.stringify(walletStore, null, 2));
   renameSync(`${storePath}.tmp`, storePath);

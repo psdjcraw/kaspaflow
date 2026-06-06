@@ -14,7 +14,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const beforePayment = getPayment(id);
+  const beforePayment = await getPayment(id);
   const payment = await syncPaymentFromWatcher(id);
 
   if (!payment) {
@@ -22,7 +22,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   if (beforePayment && beforePayment.status !== payment.status) {
-    appendAuditEvent({
+    await appendAuditEvent({
       type: "payment.status-changed",
       message: `Payment ${payment.id} changed from ${beforePayment.status} to ${payment.status}.`,
       paymentId: payment.id,

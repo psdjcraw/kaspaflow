@@ -13,7 +13,7 @@ type PageContext = {
 
 export default async function PaymentDetailPage(context: PageContext) {
   const { id } = await context.params;
-  const payment = getPayment(id);
+  const payment = await getPayment(id);
 
   if (!payment) {
     notFound();

@@ -18,6 +18,16 @@ import {
   type RefundRecord,
 } from "./kaspa";
 import { getExpiryStats, markExpired } from "./payment-expiry";
+import {
+  createPostgresPayment,
+  expirePostgresPayments,
+  getPostgresExpiryStats,
+  getPostgresPayment,
+  listPostgresPayments,
+  updatePostgresPaymentRefund,
+  updatePostgresPaymentStatus,
+} from "./postgres-store";
+import { assertFileStorageProvider, getStorageProvider } from "./storage-provider";
 
 type StoreState = {
   payments: KaspaPaymentRequest[];
@@ -27,10 +37,6 @@ declare global {
   var kaspaflowStore: StoreState | undefined;
 }
 
-const store =
-  globalThis.kaspaflowStore ??
-  (globalThis.kaspaflowStore = loadStore());
-
 export type CreatePaymentInput = {
   merchantName: string;
   merchantAddress: string;
@@ -39,22 +45,34 @@ export type CreatePaymentInput = {
   rateFiatPerKas: number;
 };
 
-export function listPayments() {
-  expireExpiredPayments();
+export async function listPayments() {
+  if (getStorageProvider() === "postgres") {
+    return listPostgresPayments();
+  }
 
-  return store.payments.map(hydratePayment).sort((a, b) =>
+  expireExpiredFilePayments();
+
+  return getFileStore().payments.map(hydratePayment).sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
 }
 
-export function getPayment(id: string) {
-  const payment = store.payments.find((entry) => entry.id === id);
+export async function getPayment(id: string) {
+  if (getStorageProvider() === "postgres") {
+    return getPostgresPayment(id);
+  }
+
+  const payment = getFileStore().payments.find((entry) => entry.id === id);
 
   return payment ? hydratePayment(payment) : null;
 }
 
-export function createPayment(input: CreatePaymentInput) {
+export async function createPayment(input: CreatePaymentInput) {
   validatePaymentInput(input);
+
+  if (getStorageProvider() === "postgres") {
+    return createPostgresPayment(input);
+  }
 
   const payment = createPaymentRequest(
     input.fiatAmount,
@@ -64,19 +82,23 @@ export function createPayment(input: CreatePaymentInput) {
     input.merchantName.trim(),
   );
 
-  store.payments.unshift(payment);
+  getFileStore().payments.unshift(payment);
   persistStore();
   return payment;
 }
 
-export function updatePaymentStatus(
+export async function updatePaymentStatus(
   id: string,
   status: PaymentStatus,
   values: Partial<
     Pick<KaspaPaymentRequest, "txHash" | "receivedKasAmount" | "simulated">
   > = {},
 ) {
-  const payment = store.payments.find((entry) => entry.id === id);
+  if (getStorageProvider() === "postgres") {
+    return updatePostgresPaymentStatus(id, status, values);
+  }
+
+  const payment = getFileStore().payments.find((entry) => entry.id === id);
 
   if (!payment) {
     return null;
@@ -93,11 +115,15 @@ export function updatePaymentStatus(
   return hydratePayment(payment);
 }
 
-export function updatePaymentRefund(
+export async function updatePaymentRefund(
   id: string,
   refund: RefundRecord,
 ) {
-  const payment = store.payments.find((entry) => entry.id === id);
+  if (getStorageProvider() === "postgres") {
+    return updatePostgresPaymentRefund(id, refund);
+  }
+
+  const payment = getFileStore().payments.find((entry) => entry.id === id);
 
   if (!payment) {
     return null;
@@ -113,8 +139,8 @@ export function updatePaymentRefund(
   return hydratePayment(payment);
 }
 
-export function getSalesSummary() {
-  const payments = listPayments();
+export async function getSalesSummary() {
+  const payments = await listPayments();
   const settledPayments = payments.filter((payment) =>
     payment.status === "confirmed" || payment.status === "overpaid"
   );
@@ -134,11 +160,19 @@ export function getSalesSummary() {
       counts[payment.status] = (counts[payment.status] ?? 0) + 1;
       return counts;
     }, {}),
-    expiry: getExpiryStats(),
+    expiry: getStorageProvider() === "postgres"
+      ? await getPostgresExpiryStats()
+      : getExpiryStats(),
   };
 }
 
+function getFileStore() {
+  return globalThis.kaspaflowStore ??
+    (globalThis.kaspaflowStore = loadStore());
+}
+
 function getStorePath() {
+  assertFileStorageProvider("payment-store");
   const dataDir =
     process.env.KASPAFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
 
@@ -161,6 +195,7 @@ function loadStore(): StoreState {
 
 function persistStore() {
   const storePath = getStorePath();
+  const store = getFileStore();
   mkdirSync(path.dirname(storePath), { recursive: true });
   writeFileSync(`${storePath}.tmp`, JSON.stringify(store, null, 2));
   renameSync(`${storePath}.tmp`, storePath);
@@ -188,9 +223,18 @@ function validatePaymentInput(input: CreatePaymentInput) {
   }
 }
 
-export function expireExpiredPayments() {
+export async function expireExpiredPayments() {
+  if (getStorageProvider() === "postgres") {
+    return expirePostgresPayments();
+  }
+
+  return expireExpiredFilePayments();
+}
+
+function expireExpiredFilePayments() {
   const now = new Date();
   const expiredIds: string[] = [];
+  const store = getFileStore();
 
   store.payments.forEach((payment) => {
     if (
