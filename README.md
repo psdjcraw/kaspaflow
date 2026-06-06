@@ -100,7 +100,10 @@ Mock defaults are only used when live requests fail or when
 `./data`, which is ignored by git.
 Run `npm run backup:data` to create a timestamped `.tgz` archive of that
 directory. Set `KASPAFLOW_BACKUP_DIR` to choose the destination; the default is
-`./backups`.
+`./backups`. Restore with `npm run restore:data -- <backup.tgz>`. The restore
+command refuses to overwrite a non-empty data directory unless `--force` is
+provided; with `--force`, it first moves the current directory aside as a
+`.pre-restore-*` copy.
 
 `KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
 `KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and

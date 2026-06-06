@@ -93,6 +93,16 @@ npm run backup:data
 The default backup directory is `./backups`; set `KASPAFLOW_BACKUP_DIR` to
 choose another destination.
 
+Restore a backup with:
+
+```bash
+npm run restore:data -- backups/<backup-file>.tgz
+```
+
+The restore command refuses to overwrite a non-empty `KASPAFLOW_DATA_DIR` unless
+`--force` is provided. With `--force`, it first moves the current directory aside
+as a `.pre-restore-*` copy.
+
 ## Operational Limits
 
 - KaspaFlow does not custody private keys.

@@ -145,6 +145,16 @@ Compose 운영 시 기본 볼륨은 `kaspaflow-data`다. 기본 백업 위치는
 npm run backup:data
 ```
 
+복구 리허설 또는 복구:
+
+```bash
+npm run restore:data -- backups/<backup-file>.tgz
+```
+
+대상 `KASPAFLOW_DATA_DIR`가 비어 있지 않으면 기본적으로 중단된다. 실제 복구가
+필요할 때만 `--force`를 붙인다. 이 경우 기존 데이터 디렉터리는
+`.pre-restore-*` 이름으로 먼저 보존된다.
+
 ## 8. 장애 대응
 
 결제 상태가 갱신되지 않을 때:
