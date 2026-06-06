@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { appendAuditEvent } from "@/lib/audit-store";
 import { requireAdminAuth } from "@/lib/auth";
+import { isFiatCurrency } from "@/lib/kaspa";
 import {
   getMerchantSettings,
   setActiveStore,
@@ -10,6 +11,21 @@ import {
   upsertEmployee,
   upsertStore,
 } from "@/lib/merchant-store";
+import {
+  getAction,
+  getBooleanField,
+  getObjectField,
+  getStringField,
+  readJsonObject,
+} from "@/lib/request-validation";
+
+const ADMIN_ACTIONS = [
+  "settings",
+  "employee",
+  "employee-status",
+  "store",
+  "active-store",
+] as const;
 
 export async function GET(request: NextRequest) {
   const authError = requireAdminAuth(request);
@@ -29,11 +45,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const action = String(body.action ?? "settings");
+    const body = await readJsonObject(request);
+    const action = getAction(body, ADMIN_ACTIONS, "settings");
 
     if (action === "employee") {
-      const settings = await upsertEmployee(body.employee ?? {});
+      const settings = await upsertEmployee(getObjectField(body, "employee"));
       await appendAuditEvent({
         type: "admin.employee",
         message: "Updated merchant employee list.",
@@ -45,16 +61,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "employee-status") {
+      const employeeId = getStringField(body, "id", {
+        required: true,
+        maxLength: 64,
+      });
+      const active = getBooleanField(body, "active", { required: true }) ??
+        false;
       const settings = await setEmployeeActive(
-        String(body.id ?? ""),
-        Boolean(body.active),
+        employeeId,
+        active,
       );
       await appendAuditEvent({
         type: "admin.employee-status",
         message: "Changed employee active status.",
         metadata: {
-          employeeId: String(body.id ?? ""),
-          active: Boolean(body.active),
+          employeeId,
+          active,
         },
       });
 
@@ -64,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "store") {
-      const settings = await upsertStore(body.store ?? {});
+      const settings = await upsertStore(getObjectField(body, "store"));
       await appendAuditEvent({
         type: "admin.store",
         message: "Updated merchant store list.",
@@ -76,12 +98,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "active-store") {
-      const settings = await setActiveStore(String(body.id ?? ""));
+      const storeId = getStringField(body, "id", {
+        required: true,
+        maxLength: 64,
+      });
+      const settings = await setActiveStore(storeId);
       await appendAuditEvent({
         type: "admin.active-store",
         message: "Changed active merchant store.",
         metadata: {
-          storeId: String(body.id ?? ""),
+          storeId,
         },
       });
 
@@ -90,10 +116,25 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const defaultCurrency = getStringField(body, "defaultCurrency", {
+      required: true,
+      maxLength: 3,
+    }).toUpperCase();
+
+    if (!isFiatCurrency(defaultCurrency)) {
+      throw new Error("Unsupported fiat currency.");
+    }
+
     const settings = await updateMerchantSettings({
-      merchantName: body.merchantName,
-      merchantAddress: body.merchantAddress,
-      defaultCurrency: body.defaultCurrency,
+      merchantName: getStringField(body, "merchantName", {
+        required: true,
+        maxLength: 80,
+      }),
+      merchantAddress: getStringField(body, "merchantAddress", {
+        required: true,
+        maxLength: 96,
+      }),
+      defaultCurrency,
     });
     await appendAuditEvent({
       type: "admin.settings",

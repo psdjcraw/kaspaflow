@@ -7,6 +7,15 @@ import {
   setWalletAddressActive,
   upsertWalletAddress,
 } from "@/lib/wallet-store";
+import {
+  getAction,
+  getBooleanField,
+  getObjectField,
+  getStringField,
+  readJsonObject,
+} from "@/lib/request-validation";
+
+const WALLET_ACTIONS = ["upsert", "status"] as const;
 
 export async function GET(request: NextRequest) {
   const authError = requireAdminAuth(request);
@@ -26,27 +35,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const action = String(body.action ?? "upsert");
+    const body = await readJsonObject(request);
+    const action = getAction(body, WALLET_ACTIONS, "upsert");
 
     if (action === "status") {
+      const walletId = getStringField(body, "id", {
+        required: true,
+        maxLength: 64,
+      });
+      const active = getBooleanField(body, "active", { required: true }) ??
+        false;
       const addresses = await setWalletAddressActive(
-        String(body.id ?? ""),
-        Boolean(body.active),
+        walletId,
+        active,
       );
       await appendAuditEvent({
         type: "wallet.status",
         message: "Changed wallet address active status.",
         metadata: {
-          walletId: String(body.id ?? ""),
-          active: Boolean(body.active),
+          walletId,
+          active,
         },
       });
 
       return NextResponse.json({ addresses });
     }
 
-    const addresses = await upsertWalletAddress(body.address ?? {});
+    const addresses = await upsertWalletAddress(getObjectField(body, "address"));
     await appendAuditEvent({
       type: "wallet.upsert",
       message: "Updated wallet address book.",

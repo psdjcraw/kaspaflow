@@ -5,6 +5,12 @@ import { requireAdminAuth } from "@/lib/auth";
 import { isKaspaAddress } from "@/lib/kaspa";
 import { sendNotification } from "@/lib/notifications";
 import { getPayment, updatePaymentRefund } from "@/lib/payment-store";
+import {
+  MAX_KAS_AMOUNT,
+  getNumberField,
+  getStringField,
+  readJsonObject,
+} from "@/lib/request-validation";
 import { verifyRefundTransaction } from "@/lib/watcher";
 
 type RouteContext = {
@@ -28,10 +34,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Payment not found." }, { status: 404 });
     }
 
-    const body = await request.json();
-    const customerAddress = String(body.customerAddress ?? "").trim();
-    const txHash = String(body.txHash ?? "").trim();
-    const kasAmount = Number(body.kasAmount ?? payment.receivedKasAmount ?? payment.kasAmount);
+    const body = await readJsonObject(request);
+    const customerAddress = getStringField(body, "customerAddress", {
+      required: true,
+      maxLength: 96,
+    });
+    const txHash = getStringField(body, "txHash", { maxLength: 128 });
+    const kasAmount = getNumberField(body, "kasAmount", {
+      fallback: payment.receivedKasAmount ?? payment.kasAmount,
+      minExclusive: 0,
+      maxInclusive: MAX_KAS_AMOUNT,
+    }) ?? payment.kasAmount;
 
     if (!isKaspaAddress(customerAddress)) {
       return NextResponse.json(
@@ -47,11 +60,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
+    if (txHash && !/^[a-fA-F0-9]{64}$/.test(txHash)) {
+      return NextResponse.json(
+        { error: "Refund transaction hash must be 64 hexadecimal characters." },
+        { status: 400 },
+      );
+    }
+
     const refund = {
       status: txHash ? "tx-provided" as const : "requested" as const,
       customerAddress,
       kasAmount,
-      reason: String(body.reason ?? "").trim() || undefined,
+      reason: getStringField(body, "reason", { maxLength: 200 }) || undefined,
       requestedAt: payment.refund?.requestedAt ?? new Date().toISOString(),
       txHash: txHash || payment.refund?.txHash,
       checkedAt: txHash ? new Date().toISOString() : payment.refund?.checkedAt,
