@@ -28,7 +28,13 @@ describe("admin API auth", () => {
       ),
     ).toBeNull();
     expect(
-      requireAdminAuth(new Request("http://localhost?adminToken=secret")),
+      requireAdminAuth(
+        new Request("http://localhost", {
+          headers: {
+            cookie: "kaspaflow-admin-token=secret",
+          },
+        }),
+      ),
     ).toBeNull();
   });
 

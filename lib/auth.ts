@@ -27,12 +27,6 @@ export function isAdminAuthEnabled() {
 }
 
 function getProvidedToken(request: Request) {
-  const urlToken = new URL(request.url).searchParams.get("adminToken");
-
-  if (urlToken) {
-    return urlToken;
-  }
-
   const explicitHeader = request.headers.get("x-kaspaflow-admin-token");
 
   if (explicitHeader) {
@@ -45,7 +39,33 @@ function getProvidedToken(request: Request) {
     return authorization.slice("bearer ".length).trim();
   }
 
+  const cookieToken = getCookieValue(
+    request.headers.get("cookie"),
+    "kaspaflow-admin-token",
+  );
+
+  if (cookieToken) {
+    return cookieToken;
+  }
+
   return null;
+}
+
+function getCookieValue(cookieHeader: string | null, name: string) {
+  if (!cookieHeader) {
+    return null;
+  }
+
+  const match = cookieHeader
+    .split(";")
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith(`${name}=`));
+
+  if (!match) {
+    return null;
+  }
+
+  return decodeURIComponent(match.slice(name.length + 1));
 }
 
 function safeTokenEqual(providedToken: string, configuredToken: string) {

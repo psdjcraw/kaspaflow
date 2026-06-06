@@ -188,14 +188,13 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    setAdminToken(window.localStorage.getItem("kaspaflow-admin-token") ?? "");
+    const storedToken = window.localStorage.getItem("kaspaflow-admin-token") ?? "";
+    setAdminToken(storedToken);
+    syncAdminTokenCookie(storedToken);
   }, []);
 
   useEffect(() => {
-    const eventUrl = adminToken
-      ? `/api/events?adminToken=${encodeURIComponent(adminToken)}`
-      : "/api/events";
-    const events = new EventSource(eventUrl);
+    const events = new EventSource("/api/events");
 
     events.addEventListener("kaspaflow", (event) => {
       const payload = JSON.parse((event as MessageEvent).data) as {
@@ -461,6 +460,7 @@ export default function Home() {
 
   function handleAdminTokenChange(value: string) {
     setAdminToken(value);
+    syncAdminTokenCookie(value.trim());
 
     if (value.trim()) {
       window.localStorage.setItem("kaspaflow-admin-token", value.trim());
@@ -1458,6 +1458,16 @@ async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit) {
     throw error;
   } finally {
     window.clearTimeout(timeout);
+  }
+}
+
+function syncAdminTokenCookie(value: string) {
+  const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+
+  if (value) {
+    document.cookie = `kaspaflow-admin-token=${encodeURIComponent(value)}; Path=/; SameSite=Lax${secureFlag}`;
+  } else {
+    document.cookie = `kaspaflow-admin-token=; Path=/; SameSite=Lax; Max-Age=0${secureFlag}`;
   }
 }
 

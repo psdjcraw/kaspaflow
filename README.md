@@ -111,9 +111,9 @@ record refunds must include the token as `x-kaspaflow-admin-token` or
 `Authorization: Bearer <token>`. Merchant-only GET endpoints for payment lists,
 analytics, audit logs, error logs, and admin settings require the same token.
 The browser UI stores the token in local
-storage from the merchant admin panel. The realtime `/api/events` stream uses
-the same token as an `adminToken` query parameter because browser EventSource
-cannot attach custom headers.
+storage and a SameSite cookie from the merchant admin panel. The realtime
+`/api/events` stream uses that cookie because browser EventSource cannot attach
+custom headers.
 
 `KASPA_WATCHER_MODE` accepts:
 
