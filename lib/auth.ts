@@ -7,6 +7,13 @@ export function requireAdminAuth(request: Request) {
   const configuredToken = process.env.KASPAFLOW_ADMIN_TOKEN;
 
   if (!configuredToken) {
+    if (isAdminAuthRequired()) {
+      return NextResponse.json(
+        { error: "KASPAFLOW_ADMIN_TOKEN is required in production." },
+        { status: 503 },
+      );
+    }
+
     return null;
   }
 
@@ -24,6 +31,10 @@ export function requireAdminAuth(request: Request) {
 
 export function isAdminAuthEnabled() {
   return Boolean(process.env.KASPAFLOW_ADMIN_TOKEN);
+}
+
+export function isAdminAuthRequired() {
+  return process.env.NODE_ENV === "production";
 }
 
 function getProvidedToken(request: Request) {

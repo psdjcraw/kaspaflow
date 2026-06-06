@@ -30,6 +30,7 @@ type HealthResponse = {
   storageProvider: string;
   watcherMode: string;
   adminAuthEnabled: boolean;
+  adminAuthRequired: boolean;
   simulationEnabled: boolean;
   checkedAt: string;
 };
@@ -661,7 +662,11 @@ export default function Home() {
       {
         label: "관리자 보호",
         ok: Boolean(health?.adminAuthEnabled),
-        detail: health?.adminAuthEnabled ? "켜짐" : "꺼짐",
+        detail: health?.adminAuthEnabled
+          ? "켜짐"
+          : health?.adminAuthRequired
+            ? "필수/꺼짐"
+            : "꺼짐",
       },
       {
         label: "시뮬레이션 차단",
@@ -1131,7 +1136,13 @@ export default function Home() {
               </div>
               <div>
                 <span>관리자 보호</span>
-                <strong>{health?.adminAuthEnabled ? "켜짐" : "꺼짐"}</strong>
+                <strong>
+                  {health?.adminAuthEnabled
+                    ? "켜짐"
+                    : health?.adminAuthRequired
+                      ? "필수/꺼짐"
+                      : "꺼짐"}
+                </strong>
               </div>
               <div>
                 <span>시뮬레이션</span>
@@ -1170,8 +1181,9 @@ export default function Home() {
 
             {health && !health.adminAuthEnabled ? (
               <p className="warning-text">
-                관리자 토큰 보호가 꺼져 있습니다. 외부에 노출하기 전
-                KASPAFLOW_ADMIN_TOKEN을 설정하세요.
+                관리자 토큰 보호가 꺼져 있습니다.
+                {health.adminAuthRequired ? " production에서는 관리자 API가 차단됩니다." : ""}
+                외부에 노출하기 전 KASPAFLOW_ADMIN_TOKEN을 설정하세요.
               </p>
             ) : null}
 

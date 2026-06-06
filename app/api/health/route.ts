@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isAdminAuthEnabled } from "@/lib/auth";
+import { isAdminAuthEnabled, isAdminAuthRequired } from "@/lib/auth";
 import { getKaspaNetwork, getKaspaRestApiUrl } from "@/lib/kaspa-network";
 import { getKaspaQuote } from "@/lib/price";
 import { getStorageStatus } from "@/lib/storage-provider";
@@ -29,6 +29,7 @@ export async function GET() {
     watcherMode: process.env.KASPA_WATCHER_MODE ?? "mock",
     backgroundSync,
     adminAuthEnabled: isAdminAuthEnabled(),
+    adminAuthRequired: isAdminAuthRequired(),
     simulationEnabled: process.env.KASPAFLOW_ENABLE_SIMULATION === "true",
     quote: await getKaspaQuote(),
     checkedAt: new Date().toISOString(),

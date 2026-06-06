@@ -72,7 +72,7 @@ curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
 - `watcherMode`가 `kaspa-rest`.
 - `backgroundSync.enabled`가 `true`.
 - `backgroundSync.lastError`가 `null`.
-- `adminAuthEnabled`가 외부 배포에서 `true`.
+- `adminAuthRequired`가 production에서 `true`, `adminAuthEnabled`가 외부 배포에서 `true`.
 - `simulationEnabled`가 실결제에서 `false`.
 - `quote.source`가 정상 운영 중 `coinone` 또는 `coingecko`.
 

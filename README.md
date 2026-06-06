@@ -105,11 +105,13 @@ requires `DATABASE_URL`. Use `npm run db:schema` to apply `db/schema.sql` before
 starting the app in Postgres mode. Use `docs/database-migration.md` for the beta
 storage cutover plan.
 
-`KASPAFLOW_ADMIN_TOKEN` is optional for local development. When it is set, API
-requests that create payments, update admin settings, sync/expire payments, or
-record refunds must include the token as `x-kaspaflow-admin-token` or
-`Authorization: Bearer <token>`. Merchant-only GET endpoints for payment lists,
-analytics, audit logs, error logs, and admin settings require the same token.
+`KASPAFLOW_ADMIN_TOKEN` is optional for local development and required at
+production runtime. If production starts without it, merchant/admin APIs return
+`503` instead of running unauthenticated. API requests that create payments,
+update admin settings, sync/expire payments, or record refunds must include the
+token as `x-kaspaflow-admin-token` or `Authorization: Bearer <token>`.
+Merchant-only GET endpoints for payment lists, analytics, audit logs, error
+logs, and admin settings require the same token.
 The browser UI stores the token in local
 storage and a SameSite cookie from the merchant admin panel. The realtime
 `/api/events` stream uses that cookie because browser EventSource cannot attach
