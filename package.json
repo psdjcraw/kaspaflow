@@ -13,6 +13,7 @@
     "restore:data": "node scripts/restore-data.mjs",
     "reconcile:sales": "node scripts/reconcile-sales.mjs",
     "preflight:prod": "node scripts/preflight-prod.mjs",
+    "release:check": "node scripts/release-check.mjs",
     "db:schema": "node scripts/apply-postgres-schema.mjs",
     "db:export": "node scripts/export-postgres-sql.mjs",
     "smoke:postgres": "node scripts/smoke-postgres-api.mjs",

@@ -62,7 +62,7 @@ Docker Compose:
 ```bash
 export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
 export KASPAFLOW_BACKUP_DIR=/app/backups
-npm run preflight:prod
+npm run release:check
 docker compose config
 docker compose up --build -d
 ```
@@ -87,6 +87,10 @@ curl -X POST 'http://localhost:3000/api/payments/sync?silent=1' \
 - `simulationEnabled`가 실결제에서 `false`.
 - `simulationBlockedInProduction`이 `true`라면 env에 시뮬레이션이 켜졌지만 production에서 차단된 상태이므로 배포 env를 정리한다.
 - `quote.source`가 정상 운영 중 `coinone` 또는 `coingecko`.
+
+`npm run release:check`는 배포 전 로컬 gate다. `build`, `typecheck`,
+`test`, `preflight:prod`, Docker Compose config, 운영 dependency audit을
+순서대로 실행한다. 이 명령이 실패하면 배포하지 않는다.
 
 ## 4. 매장 단말 세팅
 

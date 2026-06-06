@@ -110,6 +110,9 @@ Run `npm run reconcile:sales -- YYYY-MM-DD` to generate a local JSON
 reconciliation summary from file-backed payments.
 Run `npm run preflight:prod` before production deploys to check admin auth,
 mainnet watcher, simulation, storage, backup, and notification env.
+Run `npm run release:check` before a tagged deploy to execute the full local
+release gate: build, typecheck, tests, production preflight, Docker Compose
+config, and production dependency audit.
 
 `KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
 `KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and
@@ -166,6 +169,7 @@ Or use the package scripts:
 
 ```bash
 npm run docker:config
+npm run release:check
 npm run docker:up
 npm run docker:down
 npm run db:schema
