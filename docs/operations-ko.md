@@ -5,6 +5,7 @@
 Kaspa를 직접 받는다. 서버는 개인키를 저장하거나 송금하지 않는다.
 
 직원용 상태별 처리 절차는 `docs/staff-playbook-ko.md`를 함께 사용한다.
+회계/보관 기준은 `docs/accounting-retention-ko.md`를 함께 사용한다.
 
 ## 1. 운영 원칙
 
@@ -218,6 +219,7 @@ KASPAFLOW_ENABLE_SIMULATION=false
 - 소액 실결제 상태 전환이 확인됐다.
 - 매출 CSV와 지갑 입금 내역이 일치한다.
 - 데이터 디렉터리 백업 절차가 준비됐다.
+- 회계/보관 기준 문서의 일일 마감 절차를 리허설했다.
 - 세무, 환불, 회계, 결제 처리 관련 현지 규정 검토가 완료됐다.
 
 다매장 베타로 넘어가기 전에는 `docs/beta-readiness.md`의 gate를 모두 통과해야

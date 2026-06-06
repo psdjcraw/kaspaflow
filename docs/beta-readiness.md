@@ -68,6 +68,8 @@ wrong network/address.
 - Refund policy is written and visible to staff.
 - Sales CSV retention policy is defined.
 - Exchange-rate source and quote timestamp policy are documented.
+- Korean accounting and retention guide `docs/accounting-retention-ko.md` has
+  been reviewed by the operator.
 - Any required payment-processing, consumer-protection, or crypto-asset review
   is complete.
 
