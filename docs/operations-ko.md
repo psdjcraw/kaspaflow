@@ -121,6 +121,7 @@ curl -X POST http://localhost:3000/api/reports/daily \
 
 - 열린 결제가 오래 `waiting`, `seen`, `underpaid`에 머물러 있지 않은지 확인한다.
 - `/api/errors`에 `failed`, `rejected`, `invalid` 이벤트가 없는지 확인한다.
+- 일일 리포트의 `openPayments`, `attentionPayments`, `refunds` 항목을 확인한다.
 - 매장 지갑 입금 내역과 KaspaFlow 판매 로그가 맞는지 대조한다.
 - `KASPAFLOW_DATA_DIR`를 백업한다.
 - webhook을 설정한 경우 일일 리포트 알림이 도착했는지 확인한다.

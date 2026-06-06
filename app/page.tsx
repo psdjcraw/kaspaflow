@@ -113,6 +113,15 @@ type DailyReportResponse = {
     kasAmount: number;
     count: number;
   };
+  openPayments: {
+    count: number;
+  };
+  attentionPayments: {
+    count: number;
+  };
+  refunds: {
+    count: number;
+  };
   notification?: {
     sent: boolean;
     reason: string;
@@ -1249,7 +1258,13 @@ export default function Home() {
               <p className="muted-copy">
                 {dailyReport.period} 리포트: {dailyReport.today.count}건,
                 {" "}
-                {formatFiat(dailyReport.today.fiatAmount, "KRW")} / 알림
+                {formatFiat(dailyReport.today.fiatAmount, "KRW")} / 열린 결제
+                {" "}
+                {dailyReport.openPayments.count}건 / 확인 필요
+                {" "}
+                {dailyReport.attentionPayments.count}건 / 환불
+                {" "}
+                {dailyReport.refunds.count}건 / 알림
                 {" "}
                 {dailyReport.notification?.reason ?? "generated"}
               </p>

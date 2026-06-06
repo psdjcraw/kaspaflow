@@ -216,7 +216,8 @@ KASPAFLOW_ADMIN_TOKEN=dummy \
 - `GET /api/audit` returns recent payment, refund, admin, and sync events.
 - `GET /api/events` streams realtime payment, dashboard, and audit updates.
 - `GET /api/errors` returns recent failed/rejected operational events.
-- `GET /api/reports/daily` returns the current daily sales report.
+- `GET /api/reports/daily` returns the current daily sales report, including
+  open payments, attention payments, and refund summaries.
 - `POST /api/reports/daily` sends the daily sales report to the configured webhook.
 - `GET /api/sales.csv` downloads the current sales log for authenticated merchants.
 - `GET /payments/:id` opens the merchant-facing payment detail page.
