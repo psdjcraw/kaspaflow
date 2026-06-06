@@ -734,6 +734,54 @@ label {
   margin-top: 14px;
 }
 
+.attention-queue {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.compact-heading {
+  min-height: auto;
+}
+
+.compact-heading h3 {
+  margin: 0;
+}
+
+.attention-list {
+  display: grid;
+  gap: 8px;
+}
+
+.attention-row {
+  align-items: center;
+  background: #fff9e8;
+  border: 1px solid #eadfb8;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 0.42fr) auto auto;
+  min-height: 72px;
+  padding: 12px;
+}
+
+.attention-row button {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.attention-row strong,
+.attention-row span {
+  display: block;
+}
+
+.attention-row span {
+  color: var(--muted);
+}
+
 .audit-row {
   align-items: center;
   background: var(--panel-muted);
@@ -1051,6 +1099,7 @@ label {
   .sync-strip,
   .chart-grid,
   .bar-row,
+  .attention-row,
   .audit-row,
   .detail-grid,
   .payment-detail-hero,

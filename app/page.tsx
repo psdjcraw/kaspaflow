@@ -663,6 +663,10 @@ export default function Home() {
   const activePaymentTiming = activePayment
     ? getPaymentTiming(activePayment, now)
     : null;
+  const attentionPayments = useMemo(() =>
+    payments
+      .filter((payment) => isAttentionPayment(payment))
+      .slice(0, 5), [payments]);
   const readinessChecks = useMemo(() => {
     const checks = [
       {
@@ -1270,6 +1274,42 @@ export default function Home() {
               </p>
             ) : null}
 
+            <div className="attention-queue">
+              <div className="section-heading compact-heading">
+                <h3>확인 필요 결제</h3>
+                <strong>{attentionPayments.length}</strong>
+              </div>
+              {attentionPayments.length ? (
+                <div className="attention-list">
+                  {attentionPayments.map((payment) => (
+                    <article className="attention-row" key={payment.id}>
+                      <button
+                        type="button"
+                        onClick={() => void refreshPayment(payment.id)}
+                      >
+                        <strong>{payment.id}</strong>
+                        <span>{getAttentionReason(payment)}</span>
+                      </button>
+                      <div>
+                        <strong>
+                          {formatFiat(payment.fiatAmount, payment.fiatCurrency)}
+                        </strong>
+                        <span>{payment.kasAmount.toFixed(4)} KAS</span>
+                      </div>
+                      <span className={`status status-${payment.status}`}>
+                        {getStatusLabel(payment.status)}
+                      </span>
+                      <a className="detail-link" href={`/payments/${payment.id}/display`}>
+                        고객
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted-copy">현재 확인이 필요한 결제가 없습니다.</p>
+              )}
+            </div>
+
             <div className="audit-list">
               {auditEvents.length ? (
                 auditEvents.slice(0, 8).map((event) => (
@@ -1413,6 +1453,50 @@ function getStatusDescription(payment: KaspaPaymentRequest) {
   }
 
   return "QR 또는 Kaspa URI로 직접 입금을 기다립니다.";
+}
+
+function isAttentionPayment(payment: KaspaPaymentRequest) {
+  if (payment.simulated) {
+    return false;
+  }
+
+  if (["waiting", "seen", "underpaid", "overpaid", "expired"].includes(payment.status)) {
+    return true;
+  }
+
+  return Boolean(
+    payment.refund?.status &&
+      payment.refund.status !== "none" &&
+      payment.refund.status !== "confirmed",
+  );
+}
+
+function getAttentionReason(payment: KaspaPaymentRequest) {
+  if (payment.refund?.status && payment.refund.status !== "none") {
+    return `환불 ${payment.refund.status}`;
+  }
+
+  if (payment.status === "waiting") {
+    return "입금 대기";
+  }
+
+  if (payment.status === "seen") {
+    return "체인 확인 대기";
+  }
+
+  if (payment.status === "underpaid") {
+    return "부족 입금 처리 필요";
+  }
+
+  if (payment.status === "overpaid") {
+    return "초과 입금 확인 필요";
+  }
+
+  if (payment.status === "expired") {
+    return "만료 결제 정리 필요";
+  }
+
+  return "상태 확인 필요";
 }
 
 function formatDuration(milliseconds: number) {
