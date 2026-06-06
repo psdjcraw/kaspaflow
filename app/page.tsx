@@ -663,10 +663,14 @@ export default function Home() {
   const activePaymentTiming = activePayment
     ? getPaymentTiming(activePayment, now)
     : null;
-  const attentionPayments = useMemo(() =>
-    payments
-      .filter((payment) => isAttentionPayment(payment))
-      .slice(0, 5), [payments]);
+  const attentionPayments = useMemo(() => {
+    const todayKey = new Date(now).toISOString().slice(0, 10);
+
+    return payments
+      .filter((payment) => isAttentionPayment(payment, todayKey))
+      .sort(sortAttentionPayments)
+      .slice(0, 5);
+  }, [payments, now]);
   const readinessChecks = useMemo(() => {
     const checks = [
       {
@@ -1455,12 +1459,16 @@ function getStatusDescription(payment: KaspaPaymentRequest) {
   return "QR 또는 Kaspa URI로 직접 입금을 기다립니다.";
 }
 
-function isAttentionPayment(payment: KaspaPaymentRequest) {
+function isAttentionPayment(payment: KaspaPaymentRequest, todayKey: string) {
   if (payment.simulated) {
     return false;
   }
 
-  if (["waiting", "seen", "underpaid", "overpaid", "expired"].includes(payment.status)) {
+  if (["waiting", "seen", "underpaid", "overpaid"].includes(payment.status)) {
+    return true;
+  }
+
+  if (payment.status === "expired" && payment.createdAt.startsWith(todayKey)) {
     return true;
   }
 
@@ -1469,6 +1477,47 @@ function isAttentionPayment(payment: KaspaPaymentRequest) {
       payment.refund.status !== "none" &&
       payment.refund.status !== "confirmed",
   );
+}
+
+function sortAttentionPayments(
+  first: KaspaPaymentRequest,
+  second: KaspaPaymentRequest,
+) {
+  const priorityDiff = getAttentionPriority(second) - getAttentionPriority(first);
+
+  if (priorityDiff !== 0) {
+    return priorityDiff;
+  }
+
+  return second.createdAt.localeCompare(first.createdAt);
+}
+
+function getAttentionPriority(payment: KaspaPaymentRequest) {
+  if (
+    payment.refund?.status &&
+    payment.refund.status !== "none" &&
+    payment.refund.status !== "confirmed"
+  ) {
+    return 5;
+  }
+
+  if (payment.status === "underpaid" || payment.status === "overpaid") {
+    return 4;
+  }
+
+  if (payment.status === "seen") {
+    return 3;
+  }
+
+  if (payment.status === "waiting") {
+    return 2;
+  }
+
+  if (payment.status === "expired") {
+    return 1;
+  }
+
+  return 0;
 }
 
 function getAttentionReason(payment: KaspaPaymentRequest) {
