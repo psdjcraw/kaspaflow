@@ -15,6 +15,7 @@ import {
   isKaspaAddress,
   type FiatCurrency,
 } from "./kaspa";
+import { assertOperationalMerchantAddress } from "./merchant-address";
 import {
   getPostgresMerchantSettings,
   setPostgresActiveStore,
@@ -90,6 +91,10 @@ export async function getMerchantSettings() {
 export async function updateMerchantSettings(
   input: Partial<Omit<MerchantSettings, "employees" | "updatedAt">>,
 ) {
+  if (input.merchantAddress !== undefined) {
+    validateMerchantAddress(input.merchantAddress);
+  }
+
   if (getStorageProvider() === "postgres") {
     return updatePostgresMerchantSettings(input);
   }
@@ -105,10 +110,6 @@ export async function updateMerchantSettings(
   }
 
   if (input.merchantAddress !== undefined) {
-    if (!isKaspaAddress(input.merchantAddress)) {
-      throw new Error("A valid Kaspa address is required.");
-    }
-
     settings.merchantAddress = input.merchantAddress.trim();
   }
 
@@ -141,9 +142,7 @@ export async function upsertStore(input: Partial<MerchantStore>) {
     throw new Error("Store name is required.");
   }
 
-  if (!isKaspaAddress(merchantAddress)) {
-    throw new Error("A valid Kaspa address is required.");
-  }
+  validateMerchantAddress(merchantAddress);
 
   if (!isFiatCurrency(defaultCurrency)) {
     throw new Error("Unsupported fiat currency.");
@@ -338,13 +337,19 @@ function validateStoreInput(input: Partial<MerchantStore>) {
     throw new Error("Store name is required.");
   }
 
-  if (!isKaspaAddress(merchantAddress)) {
-    throw new Error("A valid Kaspa address is required.");
-  }
+  validateMerchantAddress(merchantAddress);
 
   if (!isFiatCurrency(defaultCurrency)) {
     throw new Error("Unsupported fiat currency.");
   }
+}
+
+function validateMerchantAddress(merchantAddress: string) {
+  if (!isKaspaAddress(merchantAddress)) {
+    throw new Error("A valid Kaspa address is required.");
+  }
+
+  assertOperationalMerchantAddress(merchantAddress);
 }
 
 function validateEmployeeInput(input: Partial<MerchantEmployee>) {

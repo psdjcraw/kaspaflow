@@ -103,6 +103,16 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(66, 216, 183, 0.18);
 }
 
+.address-input {
+  direction: ltr;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 18px;
@@ -565,6 +575,10 @@ label {
   border-radius: 8px;
   color: var(--muted);
   display: block;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
   padding: 13px;
 }
@@ -978,7 +992,7 @@ label {
 .customer-payment-strip {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .customer-payment-strip div,
@@ -1015,13 +1029,32 @@ label {
   grid-column: 1;
 }
 
-.customer-address button {
+.customer-address-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-content: flex-end;
+}
+
+.customer-address-actions a,
+.customer-address-actions button {
   align-self: center;
   background: var(--kaspa);
   border-color: var(--kaspa);
+  border-radius: 999px;
+  border-style: solid;
+  border-width: 1px;
   color: var(--ink);
-  grid-column: 2;
-  grid-row: 1 / span 2;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 10px 14px;
+  text-decoration: none;
 }
 
 .customer-back-link {
@@ -1132,9 +1165,22 @@ label {
     gap: 4px;
   }
 
-  .customer-address button {
+  .customer-address-actions {
     grid-column: 1;
     grid-row: auto;
+    justify-content: stretch;
+  }
+
+  .customer-address-actions a,
+  .customer-address-actions button {
+    flex: 1 1 140px;
+  }
+
+  .customer-back-link {
+    bottom: auto;
+    justify-self: end;
+    position: static;
+    right: auto;
   }
 
   .readiness-panel li {

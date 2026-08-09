@@ -807,6 +807,7 @@ export default function Home() {
             <label>
               매장 Kaspa 주소
               <input
+                className="address-input"
                 value={merchantAddress}
                 onChange={(event) => setMerchantAddress(event.target.value)}
               />
@@ -871,6 +872,7 @@ export default function Home() {
               <label>
                 새 매장 Kaspa 주소
                 <input
+                  className="address-input"
                   value={storeAddress}
                   onChange={(event) => setStoreAddress(event.target.value)}
                 />

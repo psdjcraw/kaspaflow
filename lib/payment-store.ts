@@ -17,6 +17,7 @@ import {
   type PaymentStatus,
   type RefundRecord,
 } from "./kaspa";
+import { assertOperationalMerchantAddress } from "./merchant-address";
 import { getExpiryStats, markExpired } from "./payment-expiry";
 import {
   createPostgresPayment,
@@ -209,6 +210,8 @@ function validatePaymentInput(input: CreatePaymentInput) {
   if (!isKaspaAddress(input.merchantAddress)) {
     throw new Error("A valid Kaspa address is required.");
   }
+
+  assertOperationalMerchantAddress(input.merchantAddress);
 
   if (!Number.isFinite(input.fiatAmount) || input.fiatAmount <= 0) {
     throw new Error("Payment amount must be greater than zero.");

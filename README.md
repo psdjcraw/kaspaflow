@@ -31,7 +31,6 @@ The app is intentionally designed so merchants receive KAS directly into their o
 - File-backed audit log for operational events
 - Optional webhook notifications for payment, sync, and refund events
 - Mainnet/testnet-10 Kaspa REST API selection
-- Docker Compose deployment scaffold
 - Installable PWA shell for merchant devices
 - PNG, SVG, Apple touch, and maskable PWA icons
 - Offline fallback page for installed devices
@@ -112,10 +111,15 @@ provided; with `--force`, it first moves the current directory aside as a
 Run `npm run reconcile:sales -- YYYY-MM-DD` to generate a local JSON
 reconciliation summary from file-backed payments.
 Run `npm run preflight:prod` before production deploys to check admin auth,
-mainnet watcher, simulation, storage, backup, and notification env.
+mainnet watcher, simulation, storage, backup, notification env, placeholder
+admin tokens, and file-backed merchant address setup.
+Run `npm run smoke:local` against a running local app to create a small
+file-backed pilot payment, verify the payment API, verify the merchant and
+customer pages, and optionally confirm the payment through the simulation
+endpoint when simulation is enabled.
 Run `npm run release:check` before a tagged deploy to execute the full local
-release gate: build, typecheck, tests, production preflight, Docker Compose
-config, and production dependency audit.
+release gate: build, typecheck, tests, production preflight, and production
+dependency audit.
 
 `KASPAFLOW_STORAGE_PROVIDER=file` uses the local JSON pilot store.
 `KASPAFLOW_STORAGE_PROVIDER=postgres` enables the PostgreSQL runtime adapter and
@@ -134,6 +138,9 @@ The browser UI stores the token in local
 storage and a SameSite cookie from the merchant admin panel. The realtime
 `/api/events` stream uses that cookie because browser EventSource cannot attach
 custom headers.
+Production preflight also rejects short or placeholder admin tokens such as
+`replace-with-strong-random-token`; generate a deployment-specific random value
+before exposing the app.
 
 `KASPA_WATCHER_MODE` accepts:
 
@@ -162,47 +169,14 @@ webhook events for payment creation, bulk sync, daily reports, and refund
 activity. `KASPAFLOW_NOTIFY_WEBHOOK_FORMAT` accepts `json`, `discord`, or
 `telegram`. Telegram delivery also requires `KASPAFLOW_NOTIFY_TELEGRAM_CHAT_ID`.
 
-## Docker
+## Production checks
 
 ```bash
-docker compose up --build
-```
-
-Or use the package scripts:
-
-```bash
-npm run docker:config
 npm run release:check
-npm run docker:up
-npm run docker:down
 npm run db:schema
 npm run db:export -- db/kaspaflow-import.sql
 npm run smoke:postgres
 npm run smoke:prod
-```
-
-The compose file mounts `/app/data` as a persistent volume. Set
-`KASPAFLOW_ADMIN_TOKEN`, `KASPA_NETWORK`, and webhook values before exposing the
-container outside a local pilot network.
-
-For a local Postgres rehearsal:
-
-```bash
-KASPAFLOW_ADMIN_TOKEN=dummy POSTGRES_PASSWORD=kaspaflow-dev \
-  docker compose --profile postgres up -d postgres
-
-DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
-  npm run db:schema
-
-KASPAFLOW_STORAGE_PROVIDER=postgres \
-DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
-KASPAFLOW_ADMIN_TOKEN=dummy \
-KASPAFLOW_ENABLE_SIMULATION=true \
-  npm run dev -- --port 3003
-
-KASPAFLOW_BASE_URL=http://localhost:3003 \
-KASPAFLOW_ADMIN_TOKEN=dummy \
-  npm run smoke:postgres
 ```
 
 After a production deploy, run a non-mutating smoke check against the deployed
@@ -212,6 +186,12 @@ URL:
 KASPAFLOW_BASE_URL=https://your-kaspaflow-host.example \
 KASPAFLOW_ADMIN_TOKEN=<strong-random-token> \
   npm run smoke:prod
+```
+
+For a local file-backed pilot smoke check:
+
+```bash
+KASPAFLOW_BASE_URL=http://localhost:3003 npm run smoke:local
 ```
 
 ## API

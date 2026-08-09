@@ -60,17 +60,6 @@ npm run build
 npm run start
 ```
 
-Docker Compose:
-
-```bash
-export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
-export KASPAFLOW_BACKUP_DIR=/app/backups
-npm run release:check
-docker compose config
-docker compose up --build -d
-KASPAFLOW_BASE_URL=http://localhost:3000 npm run smoke:prod
-```
-
 배포 직후 확인:
 
 ```bash
@@ -98,7 +87,7 @@ KASPAFLOW_BASE_URL=http://localhost:3000 npm run smoke:prod
 만들지 않는다.
 
 `npm run release:check`는 배포 전 로컬 gate다. `build`, `typecheck`,
-`test`, `preflight:prod`, Docker Compose config, 운영 dependency audit을
+`test`, `preflight:prod`, 운영 dependency audit을
 순서대로 실행한다. 이 명령이 실패하면 배포하지 않는다.
 
 ## 4. 매장 단말 세팅
@@ -161,8 +150,7 @@ curl -X POST http://localhost:3000/api/reports/daily \
 - 지갑 주소록 파일
 - 결제 만료 관련 파일
 
-업데이트, 서버 이전, 컨테이너 재생성 전에는 이 디렉터리를 백업한다. Docker
-Compose 운영 시 기본 볼륨은 `kaspaflow-data`다. 기본 백업 위치는
+업데이트나 서버 이전 전에는 이 디렉터리를 백업한다. 기본 백업 위치는
 `./backups`이며 `KASPAFLOW_BACKUP_DIR`로 바꿀 수 있다.
 
 권장 명령:

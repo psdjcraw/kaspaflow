@@ -50,39 +50,6 @@ a PostgreSQL-compatible managed service.
 
 9. Create one test payment, sync it, and export `/api/sales.csv`.
 
-## Local Rehearsal
-
-```bash
-KASPAFLOW_ADMIN_TOKEN=dummy POSTGRES_PASSWORD=kaspaflow-dev \
-  docker compose --profile postgres up -d postgres
-
-DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
-  npm run db:schema
-
-KASPAFLOW_STORAGE_PROVIDER=postgres \
-DATABASE_URL=postgres://kaspaflow:kaspaflow-dev@localhost:5432/kaspaflow \
-KASPAFLOW_ADMIN_TOKEN=dummy \
-KASPAFLOW_ENABLE_SIMULATION=true \
-KASPA_WATCHER_MODE=mock \
-  npm run dev -- --port 3003
-
-KASPAFLOW_BASE_URL=http://localhost:3003 \
-KASPAFLOW_ADMIN_TOKEN=dummy \
-  npm run smoke:postgres
-```
-
-Docker Compose beta shape:
-
-```bash
-export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
-export POSTGRES_PASSWORD=<strong-random-password>
-export DATABASE_URL=postgres://kaspaflow:$POSTGRES_PASSWORD@postgres:5432/kaspaflow
-export KASPAFLOW_STORAGE_PROVIDER=postgres
-
-docker compose --profile postgres up --build -d
-docker compose exec kaspaflow npm run db:schema
-```
-
 Minimum checks:
 
 - `GET /api/health` reports `storageProvider: postgres` and `storage.ready: true`.
@@ -99,9 +66,6 @@ configured `KASPAFLOW_BASE_URL`.
 ```bash
 tar -czf kaspaflow-data-$(date +%Y-%m-%d).tgz "$KASPAFLOW_DATA_DIR"
 ```
-
-For Docker Compose deployments, copy the mounted volume contents or run the
-backup command inside the application container.
 
 ## Reconciliation Queries
 

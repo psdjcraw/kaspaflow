@@ -29,6 +29,7 @@ export function PaymentDetailClient({
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<"address" | "uri" | "">("");
+  const [now, setNow] = useState(Date.now());
   const isDefaultAddress =
     payment.merchantAddress.trim().toLowerCase() ===
     DEFAULT_MERCHANT_ADDRESS.toLowerCase();
@@ -52,6 +53,12 @@ export function PaymentDetailClient({
 
     return () => window.clearInterval(interval);
   }, [payment.status, payment.id]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   async function refreshPayment() {
     setError("");
@@ -123,6 +130,10 @@ export function PaymentDetailClient({
             <div>
               <span>만료</span>
               <strong>{formatDateTime(payment.expiresAt)}</strong>
+            </div>
+            <div>
+              <span>남은 시간</span>
+              <strong>{formatRemaining(payment.expiresAt, now)}</strong>
             </div>
             <div>
               <span>적용 시세</span>
@@ -222,4 +233,15 @@ function formatDateTime(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatRemaining(expiresAt: string, now: number) {
+  const remainingSeconds = Math.max(
+    0,
+    Math.ceil((new Date(expiresAt).getTime() - now) / 1000),
+  );
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }

@@ -36,12 +36,6 @@ const steps = [
   ["Typecheck", "npm", ["run", "typecheck"], process.env],
   ["Test", "npm", ["test"], process.env],
   ["Production preflight", "npm", ["run", "preflight:prod"], baseEnv],
-  [
-    "Docker Compose config",
-    "docker",
-    ["compose", "--profile", "postgres", "config"],
-    baseEnv,
-  ],
   ["Audit production dependencies", "npm", ["audit", "--omit=dev"], process.env],
 ];
 

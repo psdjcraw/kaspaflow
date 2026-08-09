@@ -24,7 +24,8 @@ export function CustomerDisplayClient({
   const [payment, setPayment] = useState(initialPayment);
   const [kaspaUri, setKaspaUri] = useState(initialKaspaUri);
   const [qrDataUrl, setQrDataUrl] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"address" | "uri" | "">("");
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     void QRCode.toDataURL(kaspaUri, {
@@ -46,6 +47,12 @@ export function CustomerDisplayClient({
     return () => window.clearInterval(interval);
   }, [payment.status, payment.id]);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   async function refreshPayment() {
     const response = await fetch(`/api/payments/${payment.id}`, {
       cache: "no-store",
@@ -60,10 +67,10 @@ export function CustomerDisplayClient({
     setKaspaUri(payload.kaspaUri);
   }
 
-  async function copyAddress() {
-    await navigator.clipboard.writeText(payment.merchantAddress);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+  async function copyValue(kind: "address" | "uri", value: string) {
+    await navigator.clipboard.writeText(value);
+    setCopied(kind);
+    window.setTimeout(() => setCopied(""), 1600);
   }
 
   return (
@@ -103,14 +110,27 @@ export function CustomerDisplayClient({
           <span>상점</span>
           <strong>{payment.merchantName}</strong>
         </div>
+        <div>
+          <span>남은 시간</span>
+          <strong>{formatRemaining(payment.expiresAt, now)}</strong>
+        </div>
       </div>
 
       <div className="customer-address">
         <span>Kaspa 주소</span>
         <code>{payment.merchantAddress}</code>
-        <button type="button" onClick={() => void copyAddress()}>
-          {copied ? "복사됨" : "주소 복사"}
-        </button>
+        <div className="customer-address-actions">
+          <a href={kaspaUri}>지갑 열기</a>
+          <button
+            type="button"
+            onClick={() => void copyValue("address", payment.merchantAddress)}
+          >
+            {copied === "address" ? "복사됨" : "주소 복사"}
+          </button>
+          <button type="button" onClick={() => void copyValue("uri", kaspaUri)}>
+            {copied === "uri" ? "복사됨" : "URI 복사"}
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -155,4 +175,15 @@ function formatFiat(amount: number, currency: KaspaPaymentRequest["fiatCurrency"
     currency,
     maximumFractionDigits: currency === "KRW" || currency === "JPY" ? 0 : 2,
   }).format(amount);
+}
+
+function formatRemaining(expiresAt: string, now: number) {
+  const remainingSeconds = Math.max(
+    0,
+    Math.ceil((new Date(expiresAt).getTime() - now) / 1000),
+  );
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }

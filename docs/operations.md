@@ -32,13 +32,6 @@ npm run build
 npm run start
 ```
 
-Docker:
-
-```bash
-export KASPAFLOW_ADMIN_TOKEN=<strong-random-token>
-docker compose up --build -d
-```
-
 ## Health Checks
 
 ```bash
